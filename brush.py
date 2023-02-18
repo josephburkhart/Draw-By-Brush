@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -45,6 +45,19 @@ class Brush:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+
+        # Save reference to the QGIS status bar
+        self.iface.statusBarIface()
+
+        # Save additional references
+        self.tool = None
+        self.tool_name = None
+
+        self.bGeom = None
+
+        self.color = QColor(60, 151, 255, 255)
+
+        self.sb = self.iface.statusBarIface()
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
