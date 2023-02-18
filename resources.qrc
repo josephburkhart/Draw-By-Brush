@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/brush" >
-        <file>icon.png</file>
+    <qresource prefix="/plugins/brush/" >
+        <file>resources/paintbrush.png</file>
     </qresource>
 </RCC>
