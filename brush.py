@@ -167,7 +167,7 @@ class Brush:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/brush/icon.png'
+        icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Brush Tool'),
@@ -175,7 +175,6 @@ class Brush:
             parent=self.iface.mainWindow())
 
     #--------------------------------------------------------------------------
-    
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 
