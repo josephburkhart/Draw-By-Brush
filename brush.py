@@ -31,6 +31,8 @@ from .resources import *
 from .brush_dockwidget import BrushDockWidget
 import os.path
 
+# Import the brush tool code
+from .brushtools import DrawBrush
 
 class Brush:
     """QGIS Plugin Implementation."""
