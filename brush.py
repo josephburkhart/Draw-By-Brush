@@ -219,6 +219,100 @@ class Brush:
         del self.toolbar
 
     #--------------------------------------------------------------------------
+    def draw_brush(self):
+        """Activate and run the brush tool"""
+        # Reset the tool if another one is active
+        if self.tool:
+            self.tool.reset()
+
+        # Initialize and configure self.tool
+        self.tool=DrawBrush(self.iface, self.color)
+        self.tool.setAction(self.actions[0])
+        self.tool.selectionDone.connect(self.draw)
+        self.tool.move.connect(self.updateSB)
+        
+        # Select the tool in the current interface
+        self.iface.mapCanvas().setMapTool(self.tool)
+        
+        # Set attributes that describe the drawing mode (will be used in
+        # self.draw below)
+        self.draw_shape = 'brush_stroke'
+        self.tool_name = 'draw_brush'
+        
+        # Reset the status bar
+        self.resetSB()
+
+    def resetSB(self):
+        """Reset the status bar"""
+        message = {
+            'draw_brush': 'Maintain the left click to draw with a brush.'
+        }
+        self.sb.showMessage(self.tr(message[self.tool_name]))
+
+    def updateSB(self):
+        """Update the status bar"""
+        pass #TODO: placeholder
+
+    def draw(self):
+        """This is the actual drawing state"""
+        # Initialize rubber band and geometry (this is probably not necessary)
+        rb = self.tool.rb
+        g = rb.asGeometry()
+
+        # Set flags
+        ok = True
+        warning = False
+        errBuffer_noAtt = False
+        errBuffer_Vertices = False
+        add_to_existing_layer = False
+
+        # Save reference to active layer
+        layer = self.iface.layerTreeView().currentLayer()
+
+        # set name
+        name = 'brush drawings'
+
+        # Create layer for brush drawing tool
+        if self.tool_name == 'draw_brush':
+            layer_uri = (
+                f"Polygon?crs="
+                f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
+                f"&field={self.tr('Drawings')}:string(255)"
+            )
+            layer = QgsVectorLayer(layer_uri, name, "memory")
+
+        # Layer editing
+        layer.startEditing()
+        symbols = layer.renderer().symbols(QgsRenderContext()) #original note: which context?
+        symbols[0].setColor(self.color)
+        feature = QgsFeature()
+        feature.setGeometry(g)
+        # feature.setAttribute([name])
+        layer.dataProvider().addFeatures([feature])
+        layer.commitChanges()
+
+        # Add new layer if necessary 
+        if not add_to_existing_layer:
+            project = QgsProject.instance()
+            project.addMapLayer(layer, False)
+
+            # Add new layer to Drawings group (make group if it doesn't exist)
+            if project.layerTreeRoot().findGroup(self.tr('Drawings')) is None:
+                project.layerTreeRoot().insertChildNode(
+                    0, QgsLayerTreeGroup(self.tr('Drawings'))
+                )
+            group = project.layerTreeRoot().findGroup(self.tr('Drawings'))
+            group.insertLayer(0, layer)
+        
+        # Refresh the interface
+        self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+        self.iface.mapCanvas().refresh()
+
+        # Clean up at the end
+        self.tool.reset()
+        self.resetSB()
+        self.bGeom = None
+
 
     def run(self):
         """Run method that loads and starts the plugin"""
@@ -242,3 +336,6 @@ class Brush:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+
+        # Run the Draw Brush Method
+        self.draw_brush
