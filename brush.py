@@ -21,9 +21,13 @@
  *                                                                         *
  ***************************************************************************/
 """
+# Import QGIS Qt libraries
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
+
+# Import necessary QGIS classes
+from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer
 # Initialize Qt resources from file resources.py
 from .resources import *
 
