@@ -88,6 +88,9 @@ class Brush:
         self.pluginIsActive = False
         self.dockwidget = None
 
+        # Run additional initializations
+        self.run()
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -186,7 +189,7 @@ class Brush:
         self.add_action(
             icon_path,
             text=self.tr(u'Brush Tool'),
-            callback=self.run,
+            callback=self.draw_brush,
             parent=self.iface.mainWindow())
 
     #--------------------------------------------------------------------------
