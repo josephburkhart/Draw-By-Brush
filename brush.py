@@ -27,7 +27,9 @@ from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtWidgets import QAction
 
 # Import necessary QGIS classes
-from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer
+from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer,\
+    QgsRenderContext, QgsLayerTreeGroup
+
 # Initialize Qt resources from file resources.py
 from .resources import *
 
