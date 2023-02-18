@@ -42,3 +42,49 @@ class DrawBrush(QgsMapTool):
     Brush drawing tool.
     Patterned off of `drawtools.py` from the qdraw plugin.
     """
+    # Make signals for movement and end of selection
+    selectionDone = pyqtSignal()
+    move = pyqtSignal()
+
+    def __init__(self, iface, color):
+        self.canvas = iface.mapCanvas()
+        QgsMapToolEmitPoint.__init__(self, self.canvas)
+        self.iface = iface
+        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
+        self.rb.setColor(color)
+        self.reset()
+        return None
+
+    def reset(self):
+        self.startPoint = self.endPoint = None
+        self.isEmittingPoint = False
+        self.rb.reset(True)	 # true, its a polygon
+
+    def canvasPressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            if self.status == 0:
+                self.rb.reset(QgsWkbTypes.PolygonGeometry)
+                self.status = 1
+            self.rb.addPoint(self.toMapCoordinates(e.pos()))
+        else:
+            if self.rb.numberOfVertices() > 2:
+                self.status = 0
+                self.selectionDone.emit()
+            else:
+                self.reset()
+        return None
+
+    def canvasMoveEvent(self, e):
+        if self.rb.numberOfVertices() > 0 and self.status == 1:
+            self.rb.removeLastPoint(0)
+            self.rb.addPoint(self.toMapCoordinates(e.pos()))
+        self.move.emit()
+        return None
+
+    def reset(self):
+        self.status = 0
+        self.rb.reset(True)
+
+    def deactivate(self):
+        self.rb.reset(True)
+        QgsMapTool.deactivate(self)
