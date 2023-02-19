@@ -120,10 +120,12 @@ class Brush:
         text,
         callback,
         enabled_flag=True,
+        checkable=False,
         add_to_menu=True,
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
+        menu=None,
         parent=None):
         """Add a toolbar icon to the toolbar.
 
@@ -168,6 +170,7 @@ class Brush:
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
+        action.setCheckable(checkable)
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
@@ -195,6 +198,7 @@ class Brush:
         self.add_action(
             icon_path,
             text=self.tr(u'Brush Tool'),
+            checkable=True,
             callback=self.draw_brush,
             parent=self.iface.mainWindow())
 
