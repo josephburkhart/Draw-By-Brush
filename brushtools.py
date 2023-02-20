@@ -51,7 +51,7 @@ class BrushTool(QgsMapTool):
 
         # Save references to QGIS interface
         self.canvas = iface.mapCanvas()
-        QgsMapToolEmitPoint.__init__(self, self.canvas)
+        #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         self.rb.setColor(color)
