@@ -23,7 +23,7 @@
 """
 # Import QGIS Qt libraries
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon, QColor
+from qgis.PyQt.QtGui import QIcon, QColor, QPixmap, QCursor, QGuiApplication
 from qgis.PyQt.QtWidgets import QAction
 
 # Import necessary QGIS classes
@@ -351,6 +351,11 @@ class Brush:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+
+        # Set cursor shape and size
+        #mycursorpixmap=QPixmap(':/plugins/brush/resources/12gon_64x64.png')
+        #mymousecursor=QCursor(mycursorpixmap,5,5)
+        #QGuiApplication.instance().setOverrideCursor(mymousecursor)
 
         # Run the Draw Brush Method
         self.draw_brush
