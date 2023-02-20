@@ -236,6 +236,24 @@ class Brush:
     #--------------------------------------------------------------------------
     def draw_brush(self):
         """Activate and run the brush tool"""
+        # Load and start the plugin
+        if not self.pluginIsActive:
+            self.pluginIsActive = True
+
+            # dockwidget may not exist if:
+            #    first run of plugin
+            #    removed on close (see self.onClosePlugin method)
+            if self.dockwidget == None:
+                # Create the dockwidget (after translation) and keep reference
+                self.dockwidget = BrushDockWidget()
+
+            # connect to provide cleanup on closing of dockwidget
+            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+
+            # show the dockwidget
+            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+            self.dockwidget.show()
+
         # Reset the tool if another one is active
         if self.tool:
             self.tool.reset()
@@ -327,35 +345,3 @@ class Brush:
         self.tool.reset()
         self.resetSB()
         self.bGeom = None
-
-
-    def run(self):
-        """Run method that loads and starts the plugin"""
-
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
-
-            #print "** STARTING Brush"
-
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
-                # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = BrushDockWidget()
-
-            # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-            # show the dockwidget
-            # TODO: fix to allow choice of dock location
-            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
-            self.dockwidget.show()
-
-        # Set cursor shape and size
-        #mycursorpixmap=QPixmap(':/plugins/brush/resources/12gon_64x64.png')
-        #mymousecursor=QCursor(mycursorpixmap,5,5)
-        #QGuiApplication.instance().setOverrideCursor(mymousecursor)
-
-        # Run the Draw Brush Method
-        self.draw_brush
