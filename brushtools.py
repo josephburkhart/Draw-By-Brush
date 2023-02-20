@@ -47,6 +47,9 @@ class BrushTool(QgsMapTool):
     move = pyqtSignal()
 
     def __init__(self, iface, color):
+        QgsMapTool.__init__(self, iface.mapCanvas())
+
+        # Save references to QGIS interface
         self.canvas = iface.mapCanvas()
         QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
@@ -87,4 +90,19 @@ class BrushTool(QgsMapTool):
 
     def deactivate(self):
         self.rb.reset(True)
-        QgsMapTool.deactivate(self)
+        QgsMapTool.deactivate(self)    def __init__(self, mapCanvas, geometryType):
+        super().__init__(mapCanvas, geometryType)
+    
+    def paint(self, event):
+        painter = QPainter()
+        painter.begin(self)
+
+    # def mousePressEvent(self, e):
+    #     pass
+    
+    # def mouseMoveEvent(self, e):
+    #     pass
+
+    # def mouseReleaseEvent(self, e):
+    #     pass
+    
