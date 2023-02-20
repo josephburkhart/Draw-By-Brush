@@ -53,8 +53,12 @@ class BrushTool(QgsMapTool):
         self.canvas = iface.mapCanvas()
         #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
-        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
+        
+        # Configure Rubber Band
+        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.LineGeometry)
         self.rb.setColor(color)
+        self.rb.setWidth(20)
+        
         self.reset()
         return None
 
@@ -66,7 +70,7 @@ class BrushTool(QgsMapTool):
     def canvasPressEvent(self, e):
         if e.button() == Qt.LeftButton:
             if self.status == 0:
-                self.rb.reset(QgsWkbTypes.PolygonGeometry)
+                self.rb.reset(QgsWkbTypes.LineGeometry)
                 self.status = 1
             self.rb.addPoint(self.toMapCoordinates(e.pos()))
         else:
