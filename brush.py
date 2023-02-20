@@ -94,10 +94,6 @@ class Brush:
         self.pluginIsActive = False
         self.dockwidget = None
 
-        # Run additional initializations
-        self.run()
-
-
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
