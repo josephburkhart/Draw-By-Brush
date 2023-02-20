@@ -37,7 +37,7 @@ from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence
 
 from math import sqrt, pi, cos, sin
 
-class DrawBrush(QgsMapTool):
+class BrushTool(QgsMapTool):
     """
     Brush drawing tool.
     Patterned off of `drawtools.py` from the qdraw plugin.

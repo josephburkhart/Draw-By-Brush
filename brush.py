@@ -38,7 +38,7 @@ from .brush_dockwidget import BrushDockWidget
 import os.path
 
 # Import the brush tool code
-from .brushtools import DrawBrush
+from .brushtools import BrushTool
 
 class Brush:
     """QGIS Plugin Implementation."""
@@ -259,7 +259,7 @@ class Brush:
             self.tool.reset()
 
         # Initialize and configure self.tool
-        self.tool=DrawBrush(self.iface, self.color)
+        self.tool=BrushTool(self.iface, self.color)
         self.tool.setAction(self.actions[0])
         self.tool.selectionDone.connect(self.draw)
         self.tool.move.connect(self.updateSB)
