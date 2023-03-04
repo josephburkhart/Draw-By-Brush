@@ -287,7 +287,7 @@ class Brush:
         # Initialize rubber band and geometry (this is probably not necessary)
         rb = self.tool.rb
         g = rb.asGeometry()
-
+        print('added line of length '+str(len(g.asPolyline())))
         # Set flags
         ok = True
         warning = False
@@ -304,7 +304,7 @@ class Brush:
         # Create layer for brush drawing tool
         if self.tool_name == 'draw_brush':
             layer_uri = (
-                f"Polygon?crs="
+                f"LineString?crs="
                 f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
                 f"&field={self.tr('Drawings')}:string(255)"
             )
@@ -318,6 +318,7 @@ class Brush:
         feature.setGeometry(g)
         # feature.setAttribute([name])
         layer.dataProvider().addFeatures([feature])
+        print('added line of length '+str(len(g.asPolyline())))
         layer.commitChanges()
 
         # Add new layer if necessary 
