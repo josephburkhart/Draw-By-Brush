@@ -257,7 +257,8 @@ class Brush:
         # Initialize and configure self.tool
         self.tool=BrushTool(self.iface, self.color)
         self.tool.setAction(self.actions[0])
-        self.tool.selectionDone.connect(self.draw)
+        #self.tool.selectionDone.connect(self.draw)
+        self.tool.rbFinished.connect(self.draw)
         self.tool.move.connect(self.updateSB)
         
         # Select the tool in the current interface
