@@ -33,7 +33,8 @@ from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
     QGridLayout, QLabel, QGroupBox, QVBoxLayout, QComboBox, QPushButton, \
     QInputDialog
-from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence
+from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence, \
+    QPixmap, QCursor, QPainter
 
 from math import sqrt, pi, cos, sin
 
@@ -101,9 +102,11 @@ class BrushTool(QgsMapTool):
         
         if not map_units:
             context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
-            # as mm (converted to map pixels, then to map units)
-            radius *= context.scaleFactor() * context.mapToPixel().mapUnitsPerPixel()
-
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+            print(f"radius = {radius}")
+            print(f"context.scaleFactor() = {context.scaleFactor()}")
+            print(f"context.mapToPixel().mapUnitsPerPixel() = {context.mapToPixel().mapUnitsPerPixel()}")
         if not num_points:
             num_points = self.brush_points
 
