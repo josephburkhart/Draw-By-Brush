@@ -1,9 +1,7 @@
 <RCC>
     <qresource prefix="/plugins/brush/" >
         <file>resources/paintbrush.png</file>
-		<file>resources/Dodecagon.png</file>
-		<file>resources/Dodecagon2.png</file>
-		<file>resources/PrecisionCursor.png</file>
 		<file>resources/12gon_64x64.png</file>
+		<file>resources/redcircle_500x500.png</file>
     </qresource>
 </RCC>
