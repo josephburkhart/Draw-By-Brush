@@ -27,7 +27,7 @@ from builtins import range
 
 from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapToolEmitPoint, \
     QgsProjectionSelectionDialog
-from qgis.core import QgsWkbTypes, QgsPointXY, QgsGeometry
+from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, QgsRenderContext
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
@@ -61,9 +61,13 @@ class BrushTool(QgsMapTool):
         self.iface = iface
         
         # Configure Rubber Band
-        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.LineGeometry)
+        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         self.rb.setColor(color)
-        self.rb.setWidth(20)
+        self.rb.setWidth(1)
+
+        # Set default brush parameters
+        self.brush_radius = 10
+        self.brush_points = 64
 
         self.mouse_state = 'free'
         
@@ -74,6 +78,44 @@ class BrushTool(QgsMapTool):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
         self.rb.reset(True)	 # true, its a polygon
+
+    def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
+        """
+        Creates a circular QgsGeometry centered on a point with the given 
+        radius and num_points
+
+        :type center: qgis.core.QgsPoint
+        :param center: canvas point, in layer crs
+        :type radius: float
+        :param radius: cicle radius, considered to be in layer units
+        :type num_points: int
+        :param num_points: number of vertices
+        :type map_units: bool
+        :param map_units: whether the radius should be considered in map units
+        :return: QgsGeometry of type QGis.Polygon
+
+        Adapted from https://gis.stackexchange.com/a/69792
+        """
+        if not radius:
+            radius = self.brush_radius #default brush radius
+        
+        if not map_units:
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            # as mm (converted to map pixels, then to map units)
+            radius *= context.scaleFactor() * context.mapToPixel().mapUnitsPerPixel()
+
+        if not num_points:
+            num_points = self.brush_points
+
+        points = []
+
+        for i in range(num_points-1):
+            theta = i * (2.0 * pi / (num_points-1))
+            p = QgsPointXY(center.x() + radius * cos(theta),
+                         center.y() + radius * sin(theta))
+            points.append(p)
+        
+        return QgsGeometry.fromPolygonXY([points])
 
     def canvasPressEvent(self, event):
         """
@@ -88,8 +130,10 @@ class BrushTool(QgsMapTool):
         if event.button() == Qt.LeftButton:
             self.mouse_state = 'drawing_with_brush'
             point = self.toMapCoordinates(event.pos())
-            self.rb.reset(QgsWkbTypes.LineGeometry)
-            self.rb.addPoint(point)
+            #self.rb.reset(QgsWkbTypes.LineGeometry)
+            #self.rb.addPoint(point)
+            self.rb.reset(QgsWkbTypes.PolygonGeometry)
+            self.rb.setToGeometry(self.circle_around_point(point))
         
         # if e.button() == Qt.LeftButton:
         #     if self.status == 0:
@@ -116,7 +160,10 @@ class BrushTool(QgsMapTool):
 
         if self.mouse_state == 'drawing_with_brush':
             point = self.toMapCoordinates(event.pos())
-            self.rb.addPoint(point)
+            #self.rb.addPoint(point)
+            previous_geom = self.rb.asGeometry()
+            current_geom = self.circle_around_point(point)
+            self.rb.setToGeometry(previous_geom.combine(current_geom))
 
         # if self.rb.numberOfVertices() > 0 and self.status == 1:
         #     self.rb.removeLastPoint(0)
@@ -146,9 +193,10 @@ class BrushTool(QgsMapTool):
             geom = None
 
         # try:
-        self.rbFinished.emit(geom)
+        print(self.rb.asGeometry())
+        self.rbFinished.emit(self.rb.asGeometry())
         #self.selectionDone.emit()
-        print('emitted line of length '+str(len(geom.asPolyline())))
+        #print('emitted line of length '+str(len(geom.asPolyline())))
         # except:
         #     pass
 
@@ -169,7 +217,11 @@ class BrushTool(QgsMapTool):
 
     def deactivate(self):
         self.rb.reset(True)
-        QgsMapTool.deactivate(self)    def __init__(self, mapCanvas, geometryType):
+        QgsMapTool.deactivate(self)
+
+class BrushRubberBand(QgsRubberBand):
+    """Subclass of QgsRubberBand customized to behave more like a brush tool"""
+    def __init__(self, mapCanvas, geometryType):
         super().__init__(mapCanvas, geometryType)
     
     def paint(self, event):
