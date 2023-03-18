@@ -61,6 +61,7 @@ class BrushTool(QgsMapTool):
         #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
         self.active_layer = iface.activeLayer()
+        print(self.iface.activeLayer())
 
         # Save reference to active layer
         
@@ -130,7 +131,8 @@ class BrushTool(QgsMapTool):
           - start tracking mouse movement
 
         """
-        layer=self.canvas.currentLayer()
+        # Update reference to active layer
+        self.active_layer = self.iface.activeLayer()
 
         # Left click
         if event.button() == Qt.LeftButton:
@@ -162,7 +164,7 @@ class BrushTool(QgsMapTool):
             - note: the threshold value should simply be 1-99% of the brush's
               current diameter
         """
-        layer=self.canvas.currentLayer()
+        layer = self.active_layer
 
         if self.mouse_state == 'drawing_with_brush':
             point = self.toMapCoordinates(event.pos())
@@ -177,7 +179,7 @@ class BrushTool(QgsMapTool):
           - check to see if rubber band intersects with any of the active feature
           - if so, add...
         """
-        layer=self.canvas.currentLayer()
+        layer = self.active_layer
 
         # BeePen
         if not self.rb:

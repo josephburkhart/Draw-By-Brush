@@ -288,7 +288,6 @@ class Brush:
                 active_layer = QgsVectorLayer(layer_uri, name, "memory")
             
                 # Add new layer to map canvas
-                print('here')
                 project = QgsProject.instance() #TODO: make this an instance attribute so everything has access to it
                 new_map_layer = project.addMapLayer(active_layer, False)
 
@@ -307,8 +306,9 @@ class Brush:
                 self.iface.layerTreeView().refreshLayerSymbology(active_layer.id())
                 self.iface.mapCanvas().refresh()
             
-            # Save reference as instance attribute
+            # Save reference as instance attribute, update the tool attribute as well
             self.active_layer = active_layer
+            self.tool.active_layer = active_layer
 
         # Reset the status bar
         self.resetSB()
