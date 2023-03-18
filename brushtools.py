@@ -168,11 +168,6 @@ class BrushTool(QgsMapTool):
             current_geom = self.circle_around_point(point)
             self.rb.setToGeometry(previous_geom.combine(current_geom))
 
-        # if self.rb.numberOfVertices() > 0 and self.status == 1:
-        #     self.rb.removeLastPoint(0)
-        #     self.rb.addPoint(self.toMapCoordinates(e.pos()))
-        # self.move.emit()
-
     def canvasReleaseEvent(self, event):
         """
         The following needs to happen:
@@ -180,10 +175,6 @@ class BrushTool(QgsMapTool):
           - if so, add...
         """
         layer=self.canvas.currentLayer()
-
-        # if self.mouse_state != 'free':
-        #     self.drawBrushStrokeToPolygon()
-        #     self.mouse_state = 'free'
 
         # BeePen
         if not self.rb:
@@ -194,12 +185,7 @@ class BrushTool(QgsMapTool):
         else:
             geom = None
 
-        # try:
         self.rbFinished.emit(self.rb.asGeometry())
-        #self.selectionDone.emit()
-        #print('emitted line of length '+str(len(geom.asPolyline())))
-        # except:
-        #     pass
 
         # reset rubberband and refresh the canvas
         self.rb.reset()
