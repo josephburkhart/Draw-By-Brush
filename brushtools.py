@@ -32,7 +32,7 @@ from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, QgsRenderC
 from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
     QGridLayout, QLabel, QGroupBox, QVBoxLayout, QComboBox, QPushButton, \
-    QInputDialog
+    QInputDialog, QApplication
 from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence, \
     QPixmap, QCursor, QPainter
 
@@ -71,14 +71,25 @@ class BrushTool(QgsMapTool):
         self.rb.setWidth(1)
 
         # Set default brush parameters
-        self.brush_radius = 10
+        self.brush_radius = 40
         self.brush_points = 64
 
         self.mouse_state = 'free'
+
+        # Draw cursor for first time
+        self.make_cursor(self.brush_radius)
+
         
         self.reset()
         return None
 
+    def make_cursor(self, radius):
+        """"Sets the cursor to be a red circle scaled to radius in px"""
+        # Set cursor shape and size
+        mycursorpixmap=QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+        newpm = mycursorpixmap.scaled(radius*2,radius*2)
+        mymousecursor=QCursor(newpm)
+        QGuiApplication.instance().setOverrideCursor(mymousecursor)
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False

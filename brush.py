@@ -313,11 +313,7 @@ class Brush:
         # Reset the status bar
         self.resetSB()
 
-        # Set cursor shape and size
-        mycursorpixmap=QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
-        newpm = mycursorpixmap.scaled(20,20)
-        mymousecursor=QCursor(newpm)
-        QGuiApplication.instance().setOverrideCursor(mymousecursor)
+
 
     def resetSB(self):
         """Reset the status bar"""
