@@ -137,7 +137,7 @@ class BrushTool(QgsMapTool):
         # Left click
         if event.button() == Qt.LeftButton:
             self.mouse_state = 'drawing_with_brush'
-            point = self.toMapCoordinates(event.pos())
+            point = self.toLayerCoordinates(self.active_layer, event.pos())
             #self.rb.reset(QgsWkbTypes.LineGeometry)
             #self.rb.addPoint(point)
             self.rb.reset(QgsWkbTypes.PolygonGeometry)
@@ -167,7 +167,7 @@ class BrushTool(QgsMapTool):
         layer = self.active_layer
 
         if self.mouse_state == 'drawing_with_brush':
-            point = self.toMapCoordinates(event.pos())
+            point = self.toLayerCoordinates(self.active_layer, event.pos())
             #self.rb.addPoint(point)
             previous_geom = self.rb.asGeometry()
             current_geom = self.circle_around_point(point)
