@@ -28,7 +28,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 # Import necessary QGIS classes
 from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer,\
-    QgsRenderContext, QgsLayerTreeGroup
+    QgsRenderContext, QgsLayerTreeGroup, QgsWkbTypes
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -300,38 +300,42 @@ class Brush:
         warning = False
         errBuffer_noAtt = False
         errBuffer_Vertices = False
-        add_to_existing_layer = False
+        add_to_existing_layer = True
 
         # Save reference to active layer
-        layer = self.iface.layerTreeView().currentLayer()
+        active_layer = self.iface.layerTreeView().currentLayer()
 
         # set name
         name = 'brush drawings'
 
-        # Create layer for brush drawing tool
+        # Layer for brush drawing tool
         if self.tool_name == 'draw_brush':
-            layer_uri = (
-                f"Polygon?crs="
-                f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
-                f"&field={self.tr('Drawings')}:string(255)"
-            )
-            layer = QgsVectorLayer(layer_uri, name, "memory")
+            # Make a new layer if a polygon layer isn't selected
+            if not active_layer or active_layer.geometryType() != QgsWkbTypes.PolygonGeometry:
+                add_to_existing_layer = False
+                layer_uri = (
+                    f"Polygon?crs="
+                    f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
+                    f"&field={self.tr('Drawings')}:string(255)"
+                )
+                active_layer = QgsVectorLayer(layer_uri, name, "memory")
 
         # Layer editing
-        layer.startEditing()
-        symbols = layer.renderer().symbols(QgsRenderContext()) #original note: which context?
+        active_layer.startEditing()
+        symbols = active_layer.renderer().symbols(QgsRenderContext()) #original note: which context?
         symbols[0].setColor(self.color)
         feature = QgsFeature()
         feature.setGeometry(g)
+
         # feature.setAttribute([name])
-        layer.dataProvider().addFeatures([feature])
+        active_layer.dataProvider().addFeatures([feature])
         #print('added line of length '+str(len(g.asPolyline())))
-        layer.commitChanges()
+        active_layer.commitChanges()
 
         # Add new layer if necessary 
         if not add_to_existing_layer:
             project = QgsProject.instance()
-            project.addMapLayer(layer, False)
+            new_map_layer = project.addMapLayer(active_layer, False)
 
             # Add new layer to Drawings group (make group if it doesn't exist)
             if project.layerTreeRoot().findGroup(self.tr('Drawings')) is None:
@@ -339,10 +343,13 @@ class Brush:
                     0, QgsLayerTreeGroup(self.tr('Drawings'))
                 )
             group = project.layerTreeRoot().findGroup(self.tr('Drawings'))
-            group.insertLayer(0, layer)
+            group.insertLayer(0, active_layer)
+
+            # Select the new layer so that it is active for the next drawing
+            self.iface.setActiveLayer(new_map_layer)
         
         # Refresh the interface
-        self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+        self.iface.layerTreeView().refreshLayerSymbology(active_layer.id())
         self.iface.mapCanvas().refresh()
 
         # Clean up at the end
