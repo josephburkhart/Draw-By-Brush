@@ -104,9 +104,9 @@ class BrushTool(QgsMapTool):
             context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
             # scale factor is px / mm; as mm (converted to map pixels, then to map units)
             radius *= context.mapToPixel().mapUnitsPerPixel()
-            print(f"radius = {radius}")
-            print(f"context.scaleFactor() = {context.scaleFactor()}")
-            print(f"context.mapToPixel().mapUnitsPerPixel() = {context.mapToPixel().mapUnitsPerPixel()}")
+            #print(f"radius = {radius}")
+            #print(f"context.scaleFactor() = {context.scaleFactor()}")
+            #print(f"context.mapToPixel().mapUnitsPerPixel() = {context.mapToPixel().mapUnitsPerPixel()}")
         if not num_points:
             num_points = self.brush_points
 
@@ -189,14 +189,12 @@ class BrushTool(QgsMapTool):
         if not self.rb:
             return
         
-        if self.rb.numberOfVertices() > 2:
-            print('number of vertices is greater than 2')
+        if self.rb.numberOfVertices() > 2: #TODO: not necessary
             geom = self.rb.asGeometry()
         else:
             geom = None
 
         # try:
-        print(self.rb.asGeometry())
         self.rbFinished.emit(self.rb.asGeometry())
         #self.selectionDone.emit()
         #print('emitted line of length '+str(len(geom.asPolyline())))
