@@ -351,17 +351,25 @@ class Brush:
         symbols[0].setColor(self.color)
         
         # Merge new feature with any previous overlapping features
-        feature = QgsFeature()
-        # for f in active_layer.getFeatures():
-        #     if feature.geometry()
-        feature.setGeometry(g)
+        # NOTE: MERGING REMOVES THE OVERLAPPING FEATURES! DO NOT USE THIS TOOL
+        #       ON LAYERS WITH ATTRIBUTE DATA!
+        # TODO: make this tool prompt the user on merging the attribute data
+        new_feature = QgsFeature()
+        new_feature.setGeometry(g)
+        
+        overlapping_features = []
+        for f in self.active_layer.getFeatures():
+            if f.geometry().overlaps(new_feature.geometry()):        # if performance issues, use QgsGeometryEngine instead
+                overlapping_features.append(f)
+
+        for f in overlapping_features:
+            new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
+            self.active_layer.deleteFeature(f.id())
 
         # feature.setAttribute([name])
-        self.active_layer.dataProvider().addFeatures([feature])
+        self.active_layer.dataProvider().addFeatures([new_feature])
         #print('added line of length '+str(len(g.asPolyline())))
         self.active_layer.commitChanges()
-
-
         
         # Refresh the interface
         self.iface.layerTreeView().refreshLayerSymbology(self.active_layer.id())
