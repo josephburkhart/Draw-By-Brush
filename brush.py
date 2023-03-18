@@ -335,6 +335,9 @@ class Brush:
         # Initialize rubber band and geometry (this is probably not necessary)
         rb = self.tool.rb
         g = rb.asGeometry()
+
+        # Get current active layer used in the drawing tool
+        self.active_layer = self.tool.active_layer
         #print('added line of length '+str(len(g.asPolyline())))
         # Set flags
         ok = True

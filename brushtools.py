@@ -56,10 +56,13 @@ class BrushTool(QgsMapTool):
     def __init__(self, iface, color):
         QgsMapTool.__init__(self, iface.mapCanvas())
 
-        # Save references to QGIS interface
+        # Save references to QGIS interface and current active layer
         self.canvas = iface.mapCanvas()
         #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
+        self.active_layer = iface.activeLayer()
+
+        # Save reference to active layer
         
         # Configure Rubber Band
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
