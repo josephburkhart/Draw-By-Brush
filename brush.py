@@ -276,18 +276,36 @@ class Brush:
         name = 'brush drawings'
 
         # Layer for brush drawing tool
-        self.add_to_existing_layer = True
-        
         if self.tool_name == 'draw_brush':
-            # Make a new layer if a polygon layer isn't selected
+            # If a polygon layer isn't selected
             if not active_layer or active_layer.geometryType() != QgsWkbTypes.PolygonGeometry:
-                self.add_to_existing_layer = False
+                # Make a new layer
                 layer_uri = (
                     f"Polygon?crs="
                     f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
                     f"&field={self.tr('Drawings')}:string(255)"
                 )
                 active_layer = QgsVectorLayer(layer_uri, name, "memory")
+            
+                # Add new layer to map canvas
+                print('here')
+                project = QgsProject.instance() #TODO: make this an instance attribute so everything has access to it
+                new_map_layer = project.addMapLayer(active_layer, False)
+
+                # Add new layer to Drawings group (make group if it doesn't exist)
+                if project.layerTreeRoot().findGroup(self.tr('Drawings')) is None:
+                    project.layerTreeRoot().insertChildNode(
+                        0, QgsLayerTreeGroup(self.tr('Drawings'))
+                    )
+                group = project.layerTreeRoot().findGroup(self.tr('Drawings'))
+                group.insertLayer(0, active_layer)
+
+                # Select the new layer so that it is active for the next drawing
+                self.iface.setActiveLayer(new_map_layer)
+
+                # Refresh the interface
+                self.iface.layerTreeView().refreshLayerSymbology(active_layer.id())
+                self.iface.mapCanvas().refresh()
             
             # Save reference as instance attribute
             self.active_layer = active_layer
@@ -340,22 +358,7 @@ class Brush:
         #print('added line of length '+str(len(g.asPolyline())))
         self.active_layer.commitChanges()
 
-        # Add new layer if necessary 
-        if not self.add_to_existing_layer:
-            print('here')
-            project = QgsProject.instance() #TODO: make this an instance attribute so everything has access to it
-            new_map_layer = project.addMapLayer(self.active_layer, False)
 
-            # Add new layer to Drawings group (make group if it doesn't exist)
-            if project.layerTreeRoot().findGroup(self.tr('Drawings')) is None:
-                project.layerTreeRoot().insertChildNode(
-                    0, QgsLayerTreeGroup(self.tr('Drawings'))
-                )
-            group = project.layerTreeRoot().findGroup(self.tr('Drawings'))
-            group.insertLayer(0, self.active_layer)
-
-            # Select the new layer so that it is active for the next drawing
-            self.iface.setActiveLayer(new_map_layer)
         
         # Refresh the interface
         self.iface.layerTreeView().refreshLayerSymbology(self.active_layer.id())
