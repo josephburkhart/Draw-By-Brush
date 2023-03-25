@@ -27,7 +27,8 @@ from builtins import range
 
 from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapToolEmitPoint, \
     QgsProjectionSelectionDialog
-from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, QgsRenderContext
+from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, \
+    QgsRenderContext, QgsLineString
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
@@ -90,6 +91,20 @@ class BrushTool(QgsMapTool):
         newpm = mycursorpixmap.scaled(radius*2,radius*2)
         mymousecursor=QCursor(newpm)
         QGuiApplication.instance().setOverrideCursor(mymousecursor)
+
+    # def update_cursor(self, event):
+    #     """Updates the size of the cursor when user presses alt+scroll"""
+    #     modifiers = QApplication.keyboardModifiers()
+    #     if modifiers == QtCore.Qt.AltModifier:
+    #         radius = self.brush_radius * (1 + (event.pixelDelta())/50)
+    #         mycursorpixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+    #         newpm = mycursorpixmap.scaled(radius, radius)
+    #         mymousecursor = QCursor(newpm)
+    #         QGuiApplication.instance().setOverrideCursor(mymousecursor)
+    #         print('here')
+    #         self.brush_radius = radius
+
+
     def reset(self):
         self.startPoint = self.endPoint = None
         self.isEmittingPoint = False
@@ -160,6 +175,9 @@ class BrushTool(QgsMapTool):
         #self.rb.addPoint(point)
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
         self.rb.setToGeometry(self.circle_around_point(point))
+
+        # Create previous point tracker (used in canvasMoveEvent below)
+        self.prev_point = point
         
         # else:
         #     if self.rb.numberOfVertices() > 2:
@@ -180,11 +198,27 @@ class BrushTool(QgsMapTool):
         layer = self.active_layer
 
         if self.mouse_state in ('drawing_with_brush','erasing_with_brush'):
+            # Get current mouse location
             point = self.toLayerCoordinates(self.active_layer, event.pos())
-            #self.rb.addPoint(point)
+            
+            # Calculate line from previous mouse location
+            mouse_move_line = QgsLineString([self.prev_point, point])
+
+            # Calculate buffer distance (could be moved to canvasPressEvent)
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            radius = self.brush_radius
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+
+            # Calculate new geometry
+            current_geom = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
             previous_geom = self.rb.asGeometry()
-            current_geom = self.circle_around_point(point)
+
+            # Set new rubberband geometry
             self.rb.setToGeometry(previous_geom.combine(current_geom))
+
+            # Set previous point tracker to current point
+            self.prev_point = point
 
     def canvasReleaseEvent(self, event):
         """
