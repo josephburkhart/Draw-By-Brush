@@ -63,7 +63,7 @@ class Brush:
 
         self.bGeom = None
 
-        self.color = QColor(60, 151, 255, 255)
+        self.color = QColor(60, 151, 255, 127)
 
         self.sb = self.iface.statusBarIface()
 
@@ -340,33 +340,54 @@ class Brush:
         warning = False
         errBuffer_noAtt = False
         errBuffer_Vertices = False
+        drawing_mode = self.tool.mouse_state
 
         # Layer editing
         self.active_layer.startEditing()
         symbols = self.active_layer.renderer().symbols(QgsRenderContext()) #original note: which context?
         symbols[0].setColor(self.color)
         
-        # Merge new feature with any previous overlapping features
-        # NOTE: MERGING REMOVES THE OVERLAPPING FEATURES! DO NOT USE THIS TOOL
-        #       ON LAYERS WITH ATTRIBUTE DATA!
-        # TODO: make this tool prompt the user on merging the attribute data
+        # Create new feature
         new_feature = QgsFeature()
         new_feature.setGeometry(g)
         
+        # Find overlapping features
         overlapping_features = []
         for f in self.active_layer.getFeatures():
             if f.geometry().overlaps(new_feature.geometry()):        # if performance issues, use QgsGeometryEngine instead
                 overlapping_features.append(f)
 
-        for f in overlapping_features:
-            new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
-            self.active_layer.deleteFeature(f.id())
+        # If drawing, merge new feature with any previous overlapping features
+        # NOTE: MERGING REMOVES THE OVERLAPPING FEATURES! DO NOT USE THIS TOOL
+        #       ON LAYERS WITH ATTRIBUTE DATA!
+        # TODO: make this tool prompt the user on merging the attribute data
+        if drawing_mode == 'drawing_with_brush':
+            for f in overlapping_features:
+                new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
+                self.active_layer.deleteFeature(f.id())
+            
+            # Add new feature and commit changes
+            self.active_layer.dataProvider().addFeatures([new_feature])
+            self.active_layer.commitChanges()
 
-        # feature.setAttribute([name])
-        self.active_layer.dataProvider().addFeatures([new_feature])
-        #print('added line of length '+str(len(g.asPolyline())))
-        self.active_layer.commitChanges()
-        
+        # If erasing, modify existing features
+        if drawing_mode == 'erasing_with_brush':
+            for f in overlapping_features:
+                old_geom = f.geometry()
+                new_geom = old_geom.difference(new_feature.geometry())
+                f.setGeometry(new_geom)
+                self.active_layer.updateFeature(f)
+
+            self.active_layer.commitChanges()
+
+        # # feature.setAttribute([name])
+        # self.active_layer.dataProvider().addFeatures([new_feature])
+        # #print('added line of length '+str(len(g.asPolyline())))
+        # self.active_layer.commitChanges()
+
+        # Delete the instance of new_feature to free up memory
+        del new_feature
+
         # Refresh the interface
         self.iface.layerTreeView().refreshLayerSymbology(self.active_layer.id())
         self.iface.mapCanvas().refresh()

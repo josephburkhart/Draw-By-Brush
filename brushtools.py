@@ -34,7 +34,7 @@ from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
     QGridLayout, QLabel, QGroupBox, QVBoxLayout, QComboBox, QPushButton, \
     QInputDialog, QApplication
 from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence, \
-    QPixmap, QCursor, QPainter
+    QPixmap, QCursor, QPainter, QColor
 
 from math import sqrt, pi, cos, sin
 
@@ -65,7 +65,7 @@ class BrushTool(QgsMapTool):
 
         # Save reference to active layer
         
-        # Configure Rubber Band
+        # Configure Rubber Band for Drawing
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         self.rb.setColor(color)
         self.rb.setWidth(1)
@@ -145,20 +145,22 @@ class BrushTool(QgsMapTool):
         # Update reference to active layer
         self.active_layer = self.iface.activeLayer()
 
-        # Left click
+        # Set status and color
         if event.button() == Qt.LeftButton:
             self.mouse_state = 'drawing_with_brush'
-            point = self.toLayerCoordinates(self.active_layer, event.pos())
-            #self.rb.reset(QgsWkbTypes.LineGeometry)
-            #self.rb.addPoint(point)
-            self.rb.reset(QgsWkbTypes.PolygonGeometry)
-            self.rb.setToGeometry(self.circle_around_point(point))
+            self.rb.setColor(QColor(0,0,255,127))  #transparent blue
         
-        # if e.button() == Qt.LeftButton:
-        #     if self.status == 0:
-        #         self.rb.reset(QgsWkbTypes.LineGeometry)
-        #         self.status = 1
-        #     self.rb.addPoint(self.toMapCoordinates(e.pos()))
+        elif event.button() == Qt.RightButton:
+            self.mouse_state = 'erasing_with_brush'
+            self.rb.setColor(QColor(255,0,0,127))  #transparent red
+        
+        # Create initial geometry
+        point = self.toLayerCoordinates(self.active_layer, event.pos())
+        #self.rb.reset(QgsWkbTypes.LineGeometry)
+        #self.rb.addPoint(point)
+        self.rb.reset(QgsWkbTypes.PolygonGeometry)
+        self.rb.setToGeometry(self.circle_around_point(point))
+        
         # else:
         #     if self.rb.numberOfVertices() > 2:
         #         self.status = 0
@@ -177,7 +179,7 @@ class BrushTool(QgsMapTool):
         """
         layer = self.active_layer
 
-        if self.mouse_state == 'drawing_with_brush':
+        if self.mouse_state in ('drawing_with_brush','erasing_with_brush'):
             point = self.toLayerCoordinates(self.active_layer, event.pos())
             #self.rb.addPoint(point)
             previous_geom = self.rb.asGeometry()
