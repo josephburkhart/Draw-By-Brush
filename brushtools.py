@@ -95,18 +95,14 @@ class BrushTool(QgsMapTool):
         brush_cursor=QCursor(scaled_pixmap)
         self.canvas.setCursor(brush_cursor)
 
-    # def update_cursor(self, event):
-    #     """Updates the size of the cursor when user presses alt+scroll"""
-    #     modifiers = QApplication.keyboardModifiers()
-    #     if modifiers == QtCore.Qt.AltModifier:
-    #         radius = self.brush_radius * (1 + (event.pixelDelta())/50)
-    #         mycursorpixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
-    #         newpm = mycursorpixmap.scaled(radius, radius)
-    #         mymousecursor = QCursor(newpm)
-    #         QGuiApplication.instance().setOverrideCursor(mymousecursor)
-    #         print('here')
-    #         self.brush_radius = radius
-
+    def wheelEvent(self, event):
+        """If shift is pressed, rescale brush radius and redraw the cursor"""
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ShiftModifier:
+            event.accept()
+            d = event.angleDelta().y()
+            self.brush_radius *= 1 + d/1000
+            self.make_cursor(int(self.brush_radius))
 
     def reset(self):
         self.startPoint = self.endPoint = None
