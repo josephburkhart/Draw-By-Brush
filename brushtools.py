@@ -80,20 +80,20 @@ class BrushTool(QgsMapTool):
         self.draw_color = QColor(0,0,255,127)    # transparent blue
         self.erase_color = QColor(255,0,0,127)   # transparent red
 
-        # Draw cursor for first time
-        self.make_cursor(self.brush_radius)
-
-        
         self.reset()
         return None
 
+    def activate(self):
+        """Run when tool is activated"""        #TODO: wrap this into __init__?
+        self.make_cursor(self.brush_radius)
+
     def make_cursor(self, radius):
-        """"Sets the cursor to be a red circle scaled to radius in px"""
+        """Sets the cursor to be a red circle scaled to radius in px"""
         # Set cursor shape and size
-        mycursorpixmap=QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
-        newpm = mycursorpixmap.scaled(radius*2,radius*2)
-        mymousecursor=QCursor(newpm)
-        QGuiApplication.instance().setOverrideCursor(mymousecursor)
+        brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+        scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
+        brush_cursor=QCursor(scaled_pixmap)
+        self.canvas.setCursor(brush_cursor)
 
     # def update_cursor(self, event):
     #     """Updates the size of the cursor when user presses alt+scroll"""
