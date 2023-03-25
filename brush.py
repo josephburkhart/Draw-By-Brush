@@ -63,7 +63,7 @@ class Brush:
 
         self.bGeom = None
 
-        self.color = QColor(60, 151, 255, 127)
+        self.layer_color = QColor(60, 151, 255, 127)
 
         self.sb = self.iface.statusBarIface()
 
@@ -255,7 +255,7 @@ class Brush:
             self.tool.reset()
 
         # Initialize and configure self.tool
-        self.tool=BrushTool(self.iface, self.color)
+        self.tool=BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
         #self.tool.selectionDone.connect(self.draw)
         self.tool.rbFinished.connect(self.draw)
@@ -345,7 +345,7 @@ class Brush:
         # Layer editing
         self.active_layer.startEditing()
         symbols = self.active_layer.renderer().symbols(QgsRenderContext()) #original note: which context?
-        symbols[0].setColor(self.color)
+        symbols[0].setColor(self.layer_color)
         
         # Create new feature
         new_feature = QgsFeature()

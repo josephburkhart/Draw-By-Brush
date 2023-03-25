@@ -54,7 +54,7 @@ class BrushTool(QgsMapTool):
     move = pyqtSignal()
     rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
 
-    def __init__(self, iface, color):
+    def __init__(self, iface):
         QgsMapTool.__init__(self, iface.mapCanvas())
 
         # Save references to QGIS interface and current active layer
@@ -68,7 +68,6 @@ class BrushTool(QgsMapTool):
         
         # Configure Rubber Band for Drawing
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
-        self.rb.setColor(color)
         self.rb.setWidth(1)
 
         # Set default brush parameters
@@ -76,6 +75,10 @@ class BrushTool(QgsMapTool):
         self.brush_points = 64
 
         self.mouse_state = 'free'
+
+        # Set default tool colors
+        self.draw_color = QColor(0,0,255,127)    # transparent blue
+        self.erase_color = QColor(255,0,0,127)   # transparent red
 
         # Draw cursor for first time
         self.make_cursor(self.brush_radius)
@@ -163,11 +166,11 @@ class BrushTool(QgsMapTool):
         # Set status and color
         if event.button() == Qt.LeftButton:
             self.mouse_state = 'drawing_with_brush'
-            self.rb.setColor(QColor(0,0,255,127))  #transparent blue
+            self.rb.setColor(self.draw_color)
         
         elif event.button() == Qt.RightButton:
             self.mouse_state = 'erasing_with_brush'
-            self.rb.setColor(QColor(255,0,0,127))  #transparent red
+            self.rb.setColor(self.erase_color)
         
         # Create initial geometry
         point = self.toLayerCoordinates(self.active_layer, event.pos())
