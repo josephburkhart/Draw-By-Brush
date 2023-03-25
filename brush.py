@@ -239,16 +239,16 @@ class Brush:
             # dockwidget may not exist if:
             #    first run of plugin
             #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
+            #if self.dockwidget == None:
                 # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = BrushDockWidget()
+                #self.dockwidget = BrushDockWidget()
 
             # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+            #self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
             # show the dockwidget
-            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
-            self.dockwidget.show()
+            #self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+            #self.dockwidget.show()
 
         # Reset the tool if another one is active
         if self.tool:
