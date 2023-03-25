@@ -228,6 +228,19 @@ class BrushTool(QgsMapTool):
         """
         layer = self.active_layer
 
+        # Simplify the rubberband geometry
+        # tolerance value is calculated based on brush_radius and brush_points
+        # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+        # TODO: move this calculation to __init__ above (but have to account
+        #       for selecting a new layer with a different CRS)
+        context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+        radius = self.brush_radius
+        radius *= context.mapToPixel().mapUnitsPerPixel()
+
+        tolerance = (2*pi*radius)/(8*self.brush_points)
+
+        self.rb.setToGeometry(self.rb.asGeometry().simplify(tolerance))
+        
         # BeePen
         if not self.rb:
             return
