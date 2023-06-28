@@ -59,7 +59,6 @@ class BrushTool(QgsMapTool):
 
         # Save references to QGIS interface and current active layer
         self.canvas = iface.mapCanvas()
-        #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
         self.active_layer = iface.activeLayer()
         
@@ -73,8 +72,6 @@ class BrushTool(QgsMapTool):
                     self.active_layer.sourceCrs(),
                     QgsProject.instance()
                 )
-
-        # Save reference to active layer
         
         # Configure Rubber Band for Drawing
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
@@ -143,9 +140,6 @@ class BrushTool(QgsMapTool):
             context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
             # scale factor is px / mm; as mm (converted to map pixels, then to map units)
             radius *= context.mapToPixel().mapUnitsPerPixel()
-            #print(f"radius = {radius}")
-            #print(f"context.scaleFactor() = {context.scaleFactor()}")
-            #print(f"context.mapToPixel().mapUnitsPerPixel() = {context.mapToPixel().mapUnitsPerPixel()}")
         if not num_points:
             num_points = self.brush_points
 
@@ -188,20 +182,11 @@ class BrushTool(QgsMapTool):
         
         # Create initial geometry
         point = self.toMapCoordinates(event.pos())
-        #self.rb.reset(QgsWkbTypes.LineGeometry)
-        #self.rb.addPoint(point)
-        self.rb.reset(QgsWkbTypes.PolygonGeometry)
+        self.rb.reset(QgsWkbTypes.PolygonGeometry) # TODO: come back
         self.rb.setToGeometry(self.circle_around_point(point), None) #changed
 
         # Create previous point tracker (used in canvasMoveEvent below)
         self.prev_point = point
-        
-        # else:
-        #     if self.rb.numberOfVertices() > 2:
-        #         self.status = 0
-        #         self.selectionDone.emit()
-        #     else:
-        #         self.reset()
 
     def canvasMoveEvent(self, event):
         """
@@ -265,15 +250,7 @@ class BrushTool(QgsMapTool):
 
         new_geom.simplify(tolerance)
         
-        # BeePen
-        if not self.rb:
-            return
-        
-        if self.rb.numberOfVertices() > 2: #TODO: not necessary
-            geom = self.rb.asGeometry()
-        else:
-            geom = None
-
+        # Emit final geometry
         self.rbFinished.emit(new_geom)
 
         # reset rubberband and refresh the canvas
@@ -282,11 +259,6 @@ class BrushTool(QgsMapTool):
 
         self.mouse_state = 'free'
 
-    def drawBrushStrokeToPolygon(self):
-        geom = self.rb.asGeometry()
-        scale = self.canvas.scale()
-
-
     def reset(self):
         self.status = 0
         self.rb.reset(True)
@@ -294,22 +266,3 @@ class BrushTool(QgsMapTool):
     def deactivate(self):
         self.rb.reset(True)
         QgsMapTool.deactivate(self)
-
-class BrushRubberBand(QgsRubberBand):
-    """Subclass of QgsRubberBand customized to behave more like a brush tool"""
-    def __init__(self, mapCanvas, geometryType):
-        super().__init__(mapCanvas, geometryType)
-    
-    def paint(self, event):
-        painter = QPainter()
-        painter.begin(self)
-
-    # def mousePressEvent(self, e):
-    #     pass
-    
-    # def mouseMoveEvent(self, e):
-    #     pass
-
-    # def mouseReleaseEvent(self, e):
-    #     pass
-    

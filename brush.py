@@ -61,8 +61,6 @@ class Brush:
         self.tool = None
         self.tool_name = None
 
-        self.bGeom = None
-
         self.layer_color = QColor(60, 151, 255, 127)
 
         self.sb = self.iface.statusBarIface()
@@ -88,8 +86,6 @@ class Brush:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'Brush')
         self.toolbar.setObjectName(u'Brush')
-
-        #print "** INITIALIZING Brush"
 
         self.pluginIsActive = False
         self.dockwidget = None
@@ -202,24 +198,11 @@ class Brush:
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 
-        #print "** CLOSING Brush"
-
-        # disconnects
-        self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
-
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
         self.pluginIsActive = False
 
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
-        #print "** UNLOAD Brush"
 
         for action in self.actions:
             self.iface.removePluginMenu(
@@ -235,20 +218,6 @@ class Brush:
         # Load and start the plugin
         if not self.pluginIsActive:
             self.pluginIsActive = True
-
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            #if self.dockwidget == None:
-                # Create the dockwidget (after translation) and keep reference
-                #self.dockwidget = BrushDockWidget()
-
-            # connect to provide cleanup on closing of dockwidget
-            #self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-            # show the dockwidget
-            #self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
-            #self.dockwidget.show()
 
         # Reset the tool if another one is active
         if self.tool:
@@ -330,12 +299,8 @@ class Brush:
         """This is the actual drawing state"""
         # Get current active layer used in the drawing tool
         self.active_layer = self.tool.active_layer
-        #print('added line of length '+str(len(g.asPolyline())))
+
         # Set flags
-        ok = True
-        warning = False
-        errBuffer_noAtt = False
-        errBuffer_Vertices = False
         drawing_mode = self.tool.mouse_state
 
         # Layer editing
@@ -376,11 +341,6 @@ class Brush:
 
             self.active_layer.commitChanges()
 
-        # # feature.setAttribute([name])
-        # self.active_layer.dataProvider().addFeatures([new_feature])
-        # #print('added line of length '+str(len(g.asPolyline())))
-        # self.active_layer.commitChanges()
-
         # Delete the instance of new_feature to free up memory
         del new_feature
 
@@ -391,4 +351,3 @@ class Brush:
         # Clean up at the end
         self.tool.reset()
         self.resetSB()
-        self.bGeom = None
