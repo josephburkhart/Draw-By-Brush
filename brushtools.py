@@ -87,8 +87,8 @@ class BrushTool(QgsMapTool):
         self.draw_color = QColor(0,0,255,127)    # transparent blue
         self.erase_color = QColor(255,0,0,127)   # transparent red
 
+        # Reset the rubberband
         self.reset()
-        return None
 
     def activate(self):
         """Run when tool is activated"""        #TODO: wrap this into __init__?
@@ -112,9 +112,8 @@ class BrushTool(QgsMapTool):
             self.make_cursor(int(self.brush_radius))
 
     def reset(self):
-        self.startPoint = self.endPoint = None
-        self.isEmittingPoint = False
-        self.rb.reset(True)	 # true, its a polygon
+        self.prev_point = None
+        self.rb.reset(QgsWkbTypes.PolygonGeometry)
 
     def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
         """
@@ -182,7 +181,6 @@ class BrushTool(QgsMapTool):
         
         # Create initial geometry
         point = self.toMapCoordinates(event.pos())
-        self.rb.reset(QgsWkbTypes.PolygonGeometry) # TODO: come back
         self.rb.setToGeometry(self.circle_around_point(point), None) #changed
 
         # Create previous point tracker (used in canvasMoveEvent below)
@@ -254,14 +252,10 @@ class BrushTool(QgsMapTool):
         self.rbFinished.emit(new_geom)
 
         # reset rubberband and refresh the canvas
-        self.rb.reset()
+        self.reset()
         self.canvas.refresh()
 
         self.mouse_state = 'free'
-
-    def reset(self):
-        self.status = 0
-        self.rb.reset(True)
 
     def deactivate(self):
         self.rb.reset(True)
