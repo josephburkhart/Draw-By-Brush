@@ -191,7 +191,7 @@ class Brush:
             icon_path,
             text=self.tr(u'Brush Tool'),
             checkable=True,
-            callback=self.draw_brush,
+            callback=self.activate_brush_tool,
             parent=self.iface.mainWindow())
 
     #--------------------------------------------------------------------------
@@ -213,7 +213,7 @@ class Brush:
         del self.toolbar
 
     #--------------------------------------------------------------------------
-    def draw_brush(self):
+    def activate_brush_tool(self):
         """Activate and run the brush tool"""
         # Load and start the plugin
         if not self.pluginIsActive:
