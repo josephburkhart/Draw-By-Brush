@@ -235,7 +235,6 @@ class Brush:
         
         # Set attributes that describe the drawing mode (will be used in
         # self.draw below)
-        self.draw_shape = 'brush_stroke'
         self.tool_name = 'draw_brush'
 
         # Save reference to active layer
