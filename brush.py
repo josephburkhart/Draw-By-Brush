@@ -258,7 +258,7 @@ class Brush:
         self.tool=BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
         #self.tool.selectionDone.connect(self.draw)
-        self.tool.rbFinished.connect(self.draw)
+        self.tool.rbFinished.connect(lambda g: self.draw(g))
         self.tool.move.connect(self.updateSB)
         
         # Select the tool in the current interface
@@ -326,12 +326,8 @@ class Brush:
         """Update the status bar"""
         pass #TODO: placeholder
 
-    def draw(self):
+    def draw(self, g):
         """This is the actual drawing state"""
-        # Initialize rubber band and geometry (this is probably not necessary)
-        rb = self.tool.rb
-        g = rb.asGeometry()
-
         # Get current active layer used in the drawing tool
         self.active_layer = self.tool.active_layer
         #print('added line of length '+str(len(g.asPolyline())))

@@ -28,7 +28,7 @@ from builtins import range
 from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapToolEmitPoint, \
     QgsProjectionSelectionDialog
 from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, \
-    QgsRenderContext, QgsLineString
+    QgsRenderContext, QgsLineString, QgsCoordinateTransform, QgsProject
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
@@ -62,7 +62,17 @@ class BrushTool(QgsMapTool):
         #QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.iface = iface
         self.active_layer = iface.activeLayer()
-        print(self.iface.activeLayer())
+        
+        # Set reprojection flag if active_layer has different crs from map canvas
+        self.reproject_necessary = False
+        if self.active_layer != None:
+            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
+                self.reproject_necessary = True
+                self.t = QgsCoordinateTransform(
+                    self.canvas.project().crs(),
+                    self.active_layer.sourceCrs(),
+                    QgsProject.instance()
+                )
 
         # Save reference to active layer
         
@@ -158,6 +168,14 @@ class BrushTool(QgsMapTool):
         """
         # Update reference to active layer
         self.active_layer = self.iface.activeLayer()
+        if self.active_layer != None: 
+            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
+                self.reproject_necessary = True
+                self.t = QgsCoordinateTransform(
+                    self.canvas.project().crs(),
+                    self.active_layer.sourceCrs(),
+                    QgsProject.instance()
+                )
 
         # Set status and color
         if event.button() == Qt.LeftButton:
@@ -169,11 +187,11 @@ class BrushTool(QgsMapTool):
             self.rb.setColor(self.erase_color)
         
         # Create initial geometry
-        point = self.toLayerCoordinates(self.active_layer, event.pos())
+        point = self.toMapCoordinates(event.pos())
         #self.rb.reset(QgsWkbTypes.LineGeometry)
         #self.rb.addPoint(point)
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
-        self.rb.setToGeometry(self.circle_around_point(point))
+        self.rb.setToGeometry(self.circle_around_point(point), None) #changed
 
         # Create previous point tracker (used in canvasMoveEvent below)
         self.prev_point = point
@@ -198,7 +216,7 @@ class BrushTool(QgsMapTool):
 
         if self.mouse_state in ('drawing_with_brush','erasing_with_brush'):
             # Get current mouse location
-            point = self.toLayerCoordinates(self.active_layer, event.pos())
+            point = self.toMapCoordinates(event.pos())
             
             # Calculate line from previous mouse location
             mouse_move_line = QgsLineString([self.prev_point, point])
@@ -214,7 +232,7 @@ class BrushTool(QgsMapTool):
             previous_geom = self.rb.asGeometry()
 
             # Set new rubberband geometry
-            self.rb.setToGeometry(previous_geom.combine(current_geom))
+            self.rb.setToGeometry(previous_geom.combine(current_geom), None)
 
             # Set previous point tracker to current point
             self.prev_point = point
@@ -226,6 +244,13 @@ class BrushTool(QgsMapTool):
           - if so, add...
         """
         layer = self.active_layer
+        geom = self.rb.asGeometry()
+        # Reproject the rubberband geometry if necessary
+        if self.reproject_necessary == True:
+            new_geom = QgsGeometry(geom) #have to clone before transforming
+            new_geom.transform(self.t)
+        else:
+            new_geom = geom
 
         # Simplify the rubberband geometry
         # tolerance value is calculated based on brush_radius and brush_points
@@ -238,7 +263,7 @@ class BrushTool(QgsMapTool):
 
         tolerance = (2*pi*radius)/(8*self.brush_points)
 
-        self.rb.setToGeometry(self.rb.asGeometry().simplify(tolerance))
+        new_geom.simplify(tolerance)
         
         # BeePen
         if not self.rb:
@@ -249,7 +274,7 @@ class BrushTool(QgsMapTool):
         else:
             geom = None
 
-        self.rbFinished.emit(self.rb.asGeometry())
+        self.rbFinished.emit(new_geom)
 
         # reset rubberband and refresh the canvas
         self.rb.reset()
