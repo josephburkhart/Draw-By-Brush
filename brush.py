@@ -303,9 +303,7 @@ class Brush:
         drawing_mode = self.tool.mouse_state
 
         # Layer editing
-        self.active_layer.startEditing()
-        symbols = self.active_layer.renderer().symbols(QgsRenderContext()) #original note: which context?
-        symbols[0].setColor(self.layer_color)
+        self.active_layer.startEditing()    #TODO: this causes error when a layer is selected, then the tool is activated, then the layer is deselected (active_layer becomes None, and None has no method start_editing)
         
         # Create new feature
         new_feature = QgsFeature()
