@@ -250,7 +250,6 @@ class Brush:
     def set_prev_tool(self, action):
         """Reset prev_tool to the current active map tool. To be called
         whenever the action is toggled."""
-        print(action.isChecked(), self.iface.mapCanvas().mapTool())
         if action.isChecked():
             self.prev_tool = self.iface.mapCanvas().mapTool()
 
