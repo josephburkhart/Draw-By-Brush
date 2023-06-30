@@ -200,6 +200,9 @@ class Brush:
         # Get necessary info whenever active layer changes -- TODO: move to init??
         self.iface.currentLayerChanged.connect(self.get_active_layer)
 
+        # Save reference to prev map tool whenever brush action is toggled on
+        self.brush_action.toggled.connect(lambda x: self.set_prev_tool(self.brush_action))
+
         # Only enable brush action if a Polygon or MultiPolygon Vector layer
         # is selected
         self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
@@ -212,8 +215,8 @@ class Brush:
         if self.active_layer == None:
             self.disable_action(self.brush_action)
 
-        # Polygon Layer is Selected
-        if ((self.active_layer.type() == QgsMapLayer.VectorLayer) and
+        # Polygon Layer is selected
+        elif ((self.active_layer.type() == QgsMapLayer.VectorLayer) and
             (self.active_layer.geometryType() == QgsWkbTypes.PolygonGeometry) and
             self.active_layer.isEditable()):
                 self.brush_action.setEnabled(True)
@@ -244,6 +247,13 @@ class Brush:
             self.active_layer.editingStarted.connect(self.enable_brush_action_check)
             self.active_layer.editingStopped.connect(self.enable_brush_action_check)
 
+    def set_prev_tool(self, action):
+        """Reset prev_tool to the current active map tool. To be called
+        whenever the action is toggled."""
+        print(action.isChecked(), self.iface.mapCanvas().mapTool())
+        if action.isChecked():
+            self.prev_tool = self.iface.mapCanvas().mapTool()
+
     #--------------------------------------------------------------------------
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -268,9 +278,6 @@ class Brush:
         # Load and start the plugin
         if not self.pluginIsActive:
             self.pluginIsActive = True
-
-        # Save reference to current active map tool
-        self.prev_tool = self.iface.mapCanvas().mapTool()
 
         # Reset the tool if another one is active -- TODO: this is not useful
         if self.tool:
