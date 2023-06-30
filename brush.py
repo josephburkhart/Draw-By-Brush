@@ -320,9 +320,6 @@ class Brush:
         # Set flags
         drawing_mode = self.tool.mouse_state
 
-        # Layer editing
-        self.active_layer.startEditing()    #TODO: this causes error when a layer is selected, then the tool is activated, then the layer is deselected (active_layer becomes None, and None has no method start_editing)
-        
         # Create new feature
         new_feature = QgsFeature()
         new_feature.setGeometry(g)
@@ -344,7 +341,7 @@ class Brush:
             
             # Add new feature and commit changes
             self.active_layer.dataProvider().addFeatures([new_feature])
-            self.active_layer.commitChanges()
+            self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
         if drawing_mode == 'erasing_with_brush':
@@ -354,7 +351,7 @@ class Brush:
                 f.setGeometry(new_geom)
                 self.active_layer.updateFeature(f)
 
-            self.active_layer.commitChanges()
+            self.active_layer.commitChanges(stopEditing=False)
 
         # Delete the instance of new_feature to free up memory
         del new_feature
