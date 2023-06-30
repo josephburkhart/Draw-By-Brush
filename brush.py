@@ -195,14 +195,17 @@ class Brush:
             callback=self.activate_brush_tool,
             enabled_flag=False,
             parent=self.iface.mainWindow())
-        
+
+        # Get necessary info whenever active layer changes
+        self.iface.currentLayerChanged.connect(self.configure_active_layer)
+
         # Only enable brush action if a Polygon or MultiPolygon Vector layer
         # is selected
         self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
         
     def enable_brush_action_check(self):
         """Enable/Disable brush action as necessary when different types of
-        layers are selected. """
+        layers are selected. Tool can only be activated when editing is on."""
 
         active_layer = self.iface.activeLayer()
 
@@ -212,7 +215,8 @@ class Brush:
 
         # Polygon Layer is Selected
         if ((active_layer.type() == QgsMapLayer.VectorLayer) and
-            (active_layer.geometryType() == QgsWkbTypes.PolygonGeometry)):
+            (active_layer.geometryType() == QgsWkbTypes.PolygonGeometry) and
+            active_layer.isEditable()):
                 self.brush_action.setEnabled(True)
         
         # Non-polygon layer is selected
@@ -231,6 +235,15 @@ class Brush:
         # TODO: account for selected layer type
         if self.prev_tool != None:
             self.iface.mapCanvas().setMapTool(self.prev_tool)
+
+    def configure_active_layer(self):
+        """Reset the instance attributes and reconnect signals to slots as
+        necessary. To be called whenever the active layer changes."""
+        self.active_layer = self.iface.activeLayer()
+        if ((self.active_layer != None) and
+            (self.active_layer.type() == QgsMapLayer.VectorLayer)):
+            self.active_layer.editingStarted.connect(self.enable_brush_action_check)
+            self.active_layer.editingStopped.connect(self.enable_brush_action_check)
 
     #--------------------------------------------------------------------------
     def onClosePlugin(self):
