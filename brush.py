@@ -197,8 +197,8 @@ class Brush:
             enabled_flag=False,
             parent=self.iface.mainWindow())
 
-        # Get necessary info whenever active layer changes
-        self.iface.currentLayerChanged.connect(self.configure_active_layer)
+        # Get necessary info whenever active layer changes -- TODO: move to init??
+        self.iface.currentLayerChanged.connect(self.get_active_layer)
 
         # Only enable brush action if a Polygon or MultiPolygon Vector layer
         # is selected
@@ -235,9 +235,9 @@ class Brush:
         if self.prev_tool != None:
             self.iface.mapCanvas().setMapTool(self.prev_tool)
 
-    def configure_active_layer(self):
-        """Reset the instance attributes and reconnect signals to slots as
-        necessary. To be called whenever the active layer changes."""
+    def get_active_layer(self):
+        """Reset the reference to the current active layer and reconnect 
+        signals to slots as necessary. To be called whenever the active layer changes."""
         self.active_layer = self.iface.activeLayer()
         if ((self.active_layer != None) and
             (self.active_layer.type() == QgsMapLayer.VectorLayer)):
