@@ -61,6 +61,7 @@ class Brush:
         self.tool = None
         self.tool_name = None
         self.prev_tool = None
+        self.active_layer = None
 
         self.layer_color = QColor(60, 151, 255, 127)
 
@@ -207,16 +208,14 @@ class Brush:
         """Enable/Disable brush action as necessary when different types of
         layers are selected. Tool can only be activated when editing is on."""
 
-        active_layer = self.iface.activeLayer()
-
         # No layer is selected
-        if active_layer == None:
+        if self.active_layer == None:
             self.disable_action(self.brush_action)
 
         # Polygon Layer is Selected
-        if ((active_layer.type() == QgsMapLayer.VectorLayer) and
-            (active_layer.geometryType() == QgsWkbTypes.PolygonGeometry) and
-            active_layer.isEditable()):
+        if ((self.active_layer.type() == QgsMapLayer.VectorLayer) and
+            (self.active_layer.geometryType() == QgsWkbTypes.PolygonGeometry) and
+            self.active_layer.isEditable()):
                 self.brush_action.setEnabled(True)
         
         # Non-polygon layer is selected
