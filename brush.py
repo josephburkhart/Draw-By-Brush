@@ -287,50 +287,11 @@ class Brush:
         # Select the tool in the current interface
         self.iface.mapCanvas().setMapTool(self.tool)
         
-        # Set attributes that describe the drawing mode (will be used in
-        # self.draw below)
+        # Set tool name -- TODO: this is not useful
         self.tool_name = 'draw_brush'
 
-        # Save reference to active layer
-        active_layer = self.iface.layerTreeView().currentLayer()
-
-        # set name
-        name = 'brush drawings'
-
-        # Layer for brush drawing tool
-        if self.tool_name == 'draw_brush':
-            # If a polygon layer isn't selected
-            if not active_layer or active_layer.geometryType() != QgsWkbTypes.PolygonGeometry:
-                # Make a new layer
-                layer_uri = (
-                    f"Polygon?crs="
-                    f"{self.iface.mapCanvas().mapSettings().destinationCrs().authid()}"
-                    f"&field={self.tr('Drawings')}:string(255)"
-                )
-                active_layer = QgsVectorLayer(layer_uri, name, "memory")
-            
-                # Add new layer to map canvas
-                project = QgsProject.instance() #TODO: make this an instance attribute so everything has access to it
-                new_map_layer = project.addMapLayer(active_layer, False)
-
-                # Add new layer to Drawings group (make group if it doesn't exist)
-                if project.layerTreeRoot().findGroup(self.tr('Drawings')) is None:
-                    project.layerTreeRoot().insertChildNode(
-                        0, QgsLayerTreeGroup(self.tr('Drawings'))
-                    )
-                group = project.layerTreeRoot().findGroup(self.tr('Drawings'))
-                group.insertLayer(0, active_layer)
-
-                # Select the new layer so that it is active for the next drawing
-                self.iface.setActiveLayer(new_map_layer)
-
-                # Refresh the interface
-                self.iface.layerTreeView().refreshLayerSymbology(active_layer.id())
-                self.iface.mapCanvas().refresh()
-            
-            # Save reference as instance attribute, update the tool attribute as well
-            self.active_layer = active_layer
-            self.tool.active_layer = active_layer
+        # Update tool attribute
+        self.tool.active_layer = self.active_layer
 
         # Reset the status bar
         self.resetSB()
