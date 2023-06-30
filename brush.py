@@ -28,7 +28,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 # Import necessary QGIS classes
 from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer,\
-    QgsRenderContext, QgsLayerTreeGroup, QgsWkbTypes
+    QgsRenderContext, QgsLayerTreeGroup, QgsWkbTypes, QgsMapLayer
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -60,6 +60,7 @@ class Brush:
         # Save additional references
         self.tool = None
         self.tool_name = None
+        self.prev_tool = None
 
         self.layer_color = QColor(60, 151, 255, 127)
 
@@ -187,12 +188,49 @@ class Brush:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/brush/resources/paintbrush.png'
-        self.add_action(
+        self.brush_action = self.add_action(
             icon_path,
             text=self.tr(u'Brush Tool'),
             checkable=True,
             callback=self.activate_brush_tool,
+            enabled_flag=False,
             parent=self.iface.mainWindow())
+        
+        # Only enable brush action if a Polygon or MultiPolygon Vector layer
+        # is selected
+        self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
+        
+    def enable_brush_action_check(self):
+        """Enable/Disable brush action as necessary when different types of
+        layers are selected. """
+
+        active_layer = self.iface.activeLayer()
+
+        # No layer is selected
+        if active_layer == None:
+            self.disable_action(self.brush_action)
+
+        # Polygon Layer is Selected
+        if ((active_layer.type() == QgsMapLayer.VectorLayer) and
+            (active_layer.geometryType() == QgsWkbTypes.PolygonGeometry)):
+                self.brush_action.setEnabled(True)
+        
+        # Non-polygon layer is selected
+        else:
+            self.disable_action(self.brush_action)
+    
+    def disable_action(self, action):
+        """Procedure for disabling actions"""
+        # Toggle off
+        action.setChecked(False)  #uncheck
+
+        # Disable the tool
+        action.setEnabled(False)  #disable
+
+        # Restore previous map tool (if any)
+        # TODO: account for selected layer type
+        if self.prev_tool != None:
+            self.iface.mapCanvas().setMapTool(self.prev_tool)
 
     #--------------------------------------------------------------------------
     def onClosePlugin(self):
@@ -219,7 +257,10 @@ class Brush:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-        # Reset the tool if another one is active
+        # Save reference to current active map tool
+        self.prev_tool = self.iface.mapCanvas().mapTool()
+
+        # Reset the tool if another one is active -- TODO: this is not useful
         if self.tool:
             self.tool.reset()
 
@@ -280,8 +321,6 @@ class Brush:
 
         # Reset the status bar
         self.resetSB()
-
-
 
     def resetSB(self):
         """Reset the status bar"""
