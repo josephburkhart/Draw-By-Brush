@@ -35,7 +35,7 @@ from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
     QGridLayout, QLabel, QGroupBox, QVBoxLayout, QComboBox, QPushButton, \
     QInputDialog, QApplication
 from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence, \
-    QPixmap, QCursor, QPainter, QColor
+    QPixmap, QCursor, QPainter, QColor, QTransform
 
 from math import sqrt, pi, cos, sin
 
@@ -80,6 +80,7 @@ class BrushTool(QgsMapTool):
         # Set default brush parameters
         self.brush_radius = 40
         self.brush_points = 64
+        self.brush_angle = 0
 
         self.mouse_state = 'free'
 
@@ -92,24 +93,35 @@ class BrushTool(QgsMapTool):
 
     def activate(self):
         """Run when tool is activated"""        #TODO: wrap this into __init__?
-        self.make_cursor(self.brush_radius)
+        self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
 
-    def make_cursor(self, radius):
-        """Sets the cursor to be a red circle scaled to radius in px"""
+    def make_cursor(self, shape, radius, angle):
+        """Sets the cursor to be a red circle scaled to a radius in px and
+        rotated by an angle in degrees."""
         # Set cursor shape and size
         brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
         scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
-        brush_cursor=QCursor(scaled_pixmap)
+        xform = QTransform().rotate(angle)
+        xformed_pixmap = scaled_pixmap.transformed(xform)
+        brush_cursor=QCursor(xformed_pixmap)
         self.canvas.setCursor(brush_cursor)
 
     def wheelEvent(self, event):
-        """If shift is pressed, rescale brush radius and redraw the cursor"""
+        """If shift is pressed, rescale brush radius and redraw the cursor.
+        If ctrl+shift is pressed, rotate and redraw the cursor.
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ShiftModifier:
             event.accept()
             d = event.angleDelta().y()
-            self.brush_radius *= 1 + d/1000
-            self.make_cursor(int(self.brush_radius))
+            self.brush_radius *= 1 + d/1000  #TODO: account for high-dpi mice
+            self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
+        
+        elif modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+            event.accept()
+            d = event.angleDelta().y()
+            self.brush_angle += d/50
+            self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
+        
 
     def reset(self):
         self.prev_point = None
