@@ -78,9 +78,10 @@ class BrushTool(QgsMapTool):
         self.rb.setWidth(1)
 
         # Set default brush parameters
-        self.brush_radius = 40
+        self.brush_radius = 120 #originally 40
         self.brush_points = 64
         self.brush_angle = 0
+        self.brush_shape = 'wedge'
 
         self.mouse_state = 'free'
 
@@ -99,7 +100,10 @@ class BrushTool(QgsMapTool):
         """Sets the cursor to be a red circle scaled to a radius in px and
         rotated by an angle in degrees."""
         # Set cursor shape and size
-        brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+        if shape == 'circle':
+            brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+        elif shape == 'wedge':
+            brush_pixmap = QPixmap(':/plugins/brush/resources/redwedge_500x500.png')
         scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
         xform = QTransform().rotate(angle)
         xformed_pixmap = scaled_pixmap.transformed(xform)
@@ -109,6 +113,7 @@ class BrushTool(QgsMapTool):
     def wheelEvent(self, event):
         """If shift is pressed, rescale brush radius and redraw the cursor.
         If ctrl+shift is pressed, rotate and redraw the cursor.
+        If alt is pressed, toggle the brush shape."""
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ShiftModifier:
             event.accept()
@@ -122,6 +127,15 @@ class BrushTool(QgsMapTool):
             self.brush_angle += d/50
             self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
         
+        elif modifiers == (Qt.AltModifier):
+            print(f'brush shape changed from {self.brush_shape} to ', end='')
+            if self.brush_shape == 'circle':
+                self.brush_shape = 'wedge'
+            elif self.brush_shape == 'wedge':
+                self.brush_shape = 'circle'
+            print(self.brush_shape)
+            self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
+
 
     def reset(self):
         self.prev_point = None
@@ -164,6 +178,56 @@ class BrushTool(QgsMapTool):
         
         return QgsGeometry.fromPolygonXY([points])
 
+    def wedge_around_point(self, center, radius=0, theta=0, map_units=False):
+        """Creates wedge shape around a central point with a given radius,
+        rotates by an angle.
+        
+        Geometry matches :/plugins/brush/resources/redwedge_500x500.png."""
+        if not radius:
+            radius = self.brush_radius #default brush radius
+        
+        if not theta:  #TODO: remove checks like this (maybe remove to general module)
+            theta = self.brush_angle
+
+        if not map_units:
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+
+        # Convert theta to radians
+        theta = theta*(pi/180)
+
+        # Unrotated Points
+        p1_x = center.x()
+        p1_y = center.y() + radius
+        
+        p2_x = center.x() + (radius/2)
+        p2_y = center.y() - (radius/2)
+
+        p3_x = center.x() - (radius/2)
+        p3_y = center.y() - (radius/2)
+
+        # Rotated Points
+        # TODO: maybe make the geometry with the above points and then rotate using
+        #       QgsGeometry method. This would be easier to read for collaborators
+        p1_x_r =    (p1_x - center.x())*cos(theta) + (p1_y - center.y())*sin(theta) + center.x()
+        p1_y_r = -1*(p1_x - center.x())*sin(theta) + (p1_y - center.y())*cos(theta) + center.y()
+
+        p2_x_r =    (p2_x - center.x())*cos(theta) + (p2_y - center.y())*sin(theta) + center.x()
+        p2_y_r = -1*(p2_x - center.x())*sin(theta) + (p2_y - center.y())*cos(theta) + center.y()
+
+        p3_x_r =    (p3_x - center.x())*cos(theta) + (p3_y - center.y())*sin(theta) + center.x()
+        p3_y_r = -1*(p3_x - center.x())*sin(theta) + (p3_y - center.y())*cos(theta) + center.y()
+
+        points = [
+            QgsPointXY(p1_x_r, p1_y_r),
+            QgsPointXY(p2_x_r, p2_y_r),
+            QgsPointXY(p3_x_r, p3_y_r)
+        ]
+
+        return QgsGeometry.fromPolygonXY([points])
+
+
     def canvasPressEvent(self, event):
         """
         The following needs to happen:
@@ -193,10 +257,14 @@ class BrushTool(QgsMapTool):
         
         # Create initial geometry
         point = self.toMapCoordinates(event.pos())
-        self.rb.setToGeometry(self.circle_around_point(point), None) #changed
-
-        # Create previous point tracker (used in canvasMoveEvent below)
+        if self.brush_shape == 'cicle':
+            self.rb.setToGeometry(self.circle_around_point(point), None) #changed
+        elif self.brush_shape == 'wedge':
+            self.rb.setToGeometry(self.wedge_around_point(point), None)
+        
+        # Create previous point and geometry tracker (used in canvasMoveEvent below)
         self.prev_point = point
+        self.prev_geometry = self.rb.asGeometry()
 
     def canvasMoveEvent(self, event):
         """
@@ -206,6 +274,11 @@ class BrushTool(QgsMapTool):
             band and merge with existing rubber band
             - note: the threshold value should simply be 1-99% of the brush's
               current diameter
+
+        - prev_geometry: previous wedge or circle
+        - new_geometry: 
+        - current_geometry: 
+        TODO: clarify distinctions between these geometry variables...
         """
         layer = self.active_layer
 
@@ -216,21 +289,32 @@ class BrushTool(QgsMapTool):
             # Calculate line from previous mouse location
             mouse_move_line = QgsLineString([self.prev_point, point])
 
-            # Calculate buffer distance (could be moved to canvasPressEvent)
-            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
-            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
-            radius = self.brush_radius
-            radius *= context.mapToPixel().mapUnitsPerPixel()
+            # Handle drawing with circular brush
+            if self.brush_shape == 'circle':
+                # Calculate buffer distance (could be moved to canvasPressEvent)
+                # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+                context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+                radius = self.brush_radius
+                radius *= context.mapToPixel().mapUnitsPerPixel()
 
-            # Calculate new geometry
-            current_geom = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
-            previous_geom = self.rb.asGeometry()
+                # Calculate new geometry
+                current_geometry = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
+                previous_geometry = self.rb.asGeometry()
+                new_geometry = previous_geometry.combine(current_geometry)
+
+            # Handle drawing with wedge brush
+            elif self.brush_shape == 'wedge':
+                # Calculate new geometry
+                # TODO: make this more elegant
+                current_geometry = self.wedge_around_point(point)
+                new_geometry = self.rb.asGeometry().combine(current_geometry.combine(self.prev_geometry).convexHull())
 
             # Set new rubberband geometry
-            self.rb.setToGeometry(previous_geom.combine(current_geom), None)
+            self.rb.setToGeometry(new_geometry)
 
-            # Set previous point tracker to current point
+            # Set previous trackers to current data
             self.prev_point = point
+            self.prev_geometry = current_geometry
 
     def canvasReleaseEvent(self, event):
         """
