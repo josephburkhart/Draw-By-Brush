@@ -268,17 +268,10 @@ class BrushTool(QgsMapTool):
 
     def canvasMoveEvent(self, event):
         """
-        The following needs to happen:
-          - track how far the mouse has moved since canvasPressEvent
-          - once a threshold value is reached, apply current brush to rubber
-            band and merge with existing rubber band
-            - note: the threshold value should simply be 1-99% of the brush's
-              current diameter
 
         - prev_geometry: previous wedge or circle
-        - new_geometry: 
-        - current_geometry: 
-        TODO: clarify distinctions between these geometry variables...
+        - current_geometry: current wedge or circle
+        - new_geometry: what will be added to the rubberband
         """
         layer = self.active_layer
 
@@ -286,11 +279,11 @@ class BrushTool(QgsMapTool):
             # Get current mouse location
             point = self.toMapCoordinates(event.pos())
             
-            # Calculate line from previous mouse location
-            mouse_move_line = QgsLineString([self.prev_point, point])
-
             # Handle drawing with circular brush
             if self.brush_shape == 'circle':
+                # Calculate line from previous mouse location
+                mouse_move_line = QgsLineString([self.prev_point, point])
+
                 # Calculate buffer distance (could be moved to canvasPressEvent)
                 # scale factor is px / mm; as mm (converted to map pixels, then to map units)
                 context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
@@ -298,23 +291,22 @@ class BrushTool(QgsMapTool):
                 radius *= context.mapToPixel().mapUnitsPerPixel()
 
                 # Calculate new geometry
-                current_geometry = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
-                previous_geometry = self.rb.asGeometry()
-                new_geometry = previous_geometry.combine(current_geometry)
+                new_geometry = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
+
+                # Set point tracker to current point
+                self.prev_point = point
 
             # Handle drawing with wedge brush
             elif self.brush_shape == 'wedge':
                 # Calculate new geometry
-                # TODO: make this more elegant
                 current_geometry = self.wedge_around_point(point)
-                new_geometry = self.rb.asGeometry().combine(current_geometry.combine(self.prev_geometry).convexHull())
+                new_geometry = current_geometry.combine(self.prev_geometry).convexHull()
+
+                # Set geometry tracker to current geometry
+                self.prev_geometry = current_geometry
 
             # Set new rubberband geometry
-            self.rb.setToGeometry(new_geometry)
-
-            # Set previous trackers to current data
-            self.prev_point = point
-            self.prev_geometry = current_geometry
+            self.rb.setToGeometry(self.rb.asGeometry().combine(new_geometry))
 
     def canvasReleaseEvent(self, event):
         """
