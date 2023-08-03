@@ -257,7 +257,7 @@ class BrushTool(QgsMapTool):
         
         # Create initial geometry
         point = self.toMapCoordinates(event.pos())
-        if self.brush_shape == 'cicle':
+        if self.brush_shape == 'circle':
             self.rb.setToGeometry(self.circle_around_point(point), None) #changed
         elif self.brush_shape == 'wedge':
             self.rb.setToGeometry(self.wedge_around_point(point), None)
