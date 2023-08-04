@@ -83,7 +83,9 @@ class BrushTool(QgsMapTool):
         self.brush_angle = 0
         self.brush_shape = 'wedge'
 
-        self.mouse_state = 'free'
+        self.drawing_mode = 'free'
+
+        self.merging = False
 
         # Set default tool colors
         self.draw_color = QColor(0,0,255,127)    # transparent blue
@@ -248,11 +250,11 @@ class BrushTool(QgsMapTool):
 
         # Set status and color
         if event.button() == Qt.LeftButton:
-            self.mouse_state = 'drawing_with_brush'
+            self.drawing_mode = 'drawing_with_brush'
             self.rb.setColor(self.draw_color)
         
         elif event.button() == Qt.RightButton:
-            self.mouse_state = 'erasing_with_brush'
+            self.drawing_mode = 'erasing_with_brush'
             self.rb.setColor(self.erase_color)
         
         # Create initial geometry
@@ -275,7 +277,7 @@ class BrushTool(QgsMapTool):
         """
         layer = self.active_layer
 
-        if self.mouse_state in ('drawing_with_brush','erasing_with_brush'):
+        if self.drawing_mode in ('drawing_with_brush','erasing_with_brush'):
             # Get current mouse location
             point = self.toMapCoordinates(event.pos())
             
@@ -343,7 +345,7 @@ class BrushTool(QgsMapTool):
         self.reset()
         self.canvas.refresh()
 
-        self.mouse_state = 'free'
+        self.drawing_mode = 'free'
 
     def deactivate(self):
         self.rb.reset(True)

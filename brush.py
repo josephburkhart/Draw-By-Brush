@@ -317,9 +317,6 @@ class Brush:
         # Get current active layer used in the drawing tool
         self.active_layer = self.tool.active_layer
 
-        # Set flags
-        drawing_mode = self.tool.mouse_state
-
         # Create new feature
         new_feature = QgsFeature()
         new_feature.setGeometry(g)
@@ -334,7 +331,7 @@ class Brush:
         # NOTE: MERGING REMOVES THE OVERLAPPING FEATURES! DO NOT USE THIS TOOL
         #       ON LAYERS WITH ATTRIBUTE DATA!
         # TODO: make this tool prompt the user on merging the attribute data
-        if drawing_mode == 'drawing_with_brush':
+        if self.tool.drawing_mode == 'drawing_with_brush':
             for f in overlapping_features:
                 new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
                 self.active_layer.deleteFeature(f.id())
@@ -344,7 +341,7 @@ class Brush:
             self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
-        if drawing_mode == 'erasing_with_brush':
+        if self.tool.drawing_mode == 'erasing_with_brush':
             for f in overlapping_features:
                 old_geom = f.geometry()
                 new_geom = old_geom.difference(new_feature.geometry())
