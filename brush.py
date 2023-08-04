@@ -320,17 +320,11 @@ class Brush:
         # Create new feature
         new_feature = QgsFeature()
         new_feature.setGeometry(g)
-        
-        # Find overlapping features
-        overlapping_features = []
-        for f in self.active_layer.getFeatures():
-            if f.geometry().overlaps(new_feature.geometry()):        # if performance issues, use QgsGeometryEngine instead
-                overlapping_features.append(f)
 
-        # If drawing, merge new feature with any previous overlapping features
-        # NOTE: MERGING REMOVES THE OVERLAPPING FEATURES! DO NOT USE THIS TOOL
-        #       ON LAYERS WITH ATTRIBUTE DATA!
-        # TODO: make this tool prompt the user on merging the attribute data
+        # Calculate overlapping features
+        overlapping_features = self.features_overlapping_with(new_feature)
+
+        # If drawing, add new feature
         if self.tool.drawing_mode == 'drawing_with_brush':
             for f in overlapping_features:
                 new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
@@ -360,3 +354,18 @@ class Brush:
         # Clean up at the end
         self.tool.reset()
         self.resetSB()
+    
+    def features_overlapping_with(self, feature):
+        """Returns a list of features in self.active_layer that overlap with
+        a given `feature`. Both `feature` and self.adtive_layer must be in
+        the same CRS.
+        
+        Note: if this method causes performance issues, QgsGeometryEngine
+        may provide more efficient approach.
+        """
+        overlapping_features = []
+        for f in self.active_layer.getFeatures():
+            if f.geometry().overlaps(feature.geometry()):
+                overlapping_features.append(f)
+        return overlapping_features
+
