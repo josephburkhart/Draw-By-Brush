@@ -326,9 +326,14 @@ class Brush:
 
         # If drawing, add new feature
         if self.tool.drawing_mode == 'drawing_with_brush':
-            for f in overlapping_features:
-                new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
-                self.active_layer.deleteFeature(f.id())
+            # If merging, recalculate the geometry of new_feature and delete
+            # all overlapping features
+            # TODO: if attributes are present, prompt user to select which
+            #       overlapping feature to take attribute data from
+            if self.tool.merging:
+                for f in overlapping_features:
+                    new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
+                    self.active_layer.deleteFeature(f.id())
             
             # Add new feature and commit changes
             self.active_layer.dataProvider().addFeatures([new_feature])

@@ -237,6 +237,7 @@ class BrushTool(QgsMapTool):
           - start tracking mouse movement
 
         """
+
         # Update reference to active layer
         self.active_layer = self.iface.activeLayer()
         if self.active_layer != None: 
@@ -252,6 +253,11 @@ class BrushTool(QgsMapTool):
         if event.button() == Qt.LeftButton:
             self.drawing_mode = 'drawing_with_brush'
             self.rb.setColor(self.draw_color)
+
+            # If user pressed Ctrl, toggle the merging flag
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers == Qt.ControlModifier:
+                self.merging = True
         
         elif event.button() == Qt.RightButton:
             self.drawing_mode = 'erasing_with_brush'
@@ -341,11 +347,13 @@ class BrushTool(QgsMapTool):
         # Emit final geometry
         self.rbFinished.emit(new_geom)
 
-        # reset rubberband and refresh the canvas
+        # refresh the canvas and reset the rubberband and flags
         self.reset()
         self.canvas.refresh()
 
         self.drawing_mode = 'free'
+
+        self.merging = False
 
     def deactivate(self):
         self.rb.reset(True)
