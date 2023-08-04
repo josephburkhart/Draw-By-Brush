@@ -321,9 +321,6 @@ class Brush:
         new_feature = QgsFeature()
         new_feature.setGeometry(g)
 
-        # Calculate overlapping features
-        overlapping_features = self.features_overlapping_with(new_feature)
-
         # If drawing, add new feature
         if self.tool.drawing_mode == 'drawing_with_brush':
             # If merging, recalculate the geometry of new_feature and delete
@@ -331,7 +328,8 @@ class Brush:
             # TODO: if attributes are present, prompt user to select which
             #       overlapping feature to take attribute data from
             if self.tool.merging:
-                for f in overlapping_features:
+                overlapping_features = self.features_overlapping_with(new_feature)    
+                for f in overlapping_features['any_overlap']:
                     new_feature.setGeometry(new_feature.geometry().combine(f.geometry()))
                     self.active_layer.deleteFeature(f.id())
             
@@ -340,8 +338,61 @@ class Brush:
             self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
-        if self.tool.drawing_mode == 'erasing_with_brush':
-            for f in overlapping_features:
+        elif self.tool.drawing_mode == 'erasing_with_brush':
+            # Calculate overlapping features
+            overlapping_features = self.features_overlapping_with(new_feature)
+            
+            # Cut a hole through all features that new_feature is contained by
+            contained_by_features = overlapping_features['contained_by']
+            for f in contained_by_features:
+                # Get current and previous geometries
+                current_geometry = new_feature.geometry()
+                current_polygon = current_geometry.asMultiPolygon()[0]  #TODO: I don't know why it's multipolygon instead of polygon...
+                current_exterior = current_polygon[0]
+                current_holes = current_polygon[1:] 
+                
+                previous_geometry = f.geometry()
+                previous_geometry.convertToMultiType() #sometimes previous feature is not multitype
+                previous_polygon = previous_geometry.asMultiPolygon()[0]
+                previous_exterior = previous_polygon[0]
+                previous_holes = previous_polygon[1:]
+
+                # Calculate new holes
+                previous_holes_geometry = QgsGeometry().fromMultiPolygonXY([previous_holes])
+                new_holes_geometry = QgsGeometry().fromMultiPolygonXY([[current_exterior]])
+                new_holes_geometry.combine(previous_holes_geometry)
+                new_holes = new_holes_geometry.asMultiPolygon()
+
+                # Calculate new island parts, if any
+                if current_holes != []:
+                    print(current_holes)
+                    current_holes_geometry = QgsGeometry().fromMultiPolygonXY([current_holes])
+                    new_parts_geometry = current_holes_geometry.intersection(previous_geometry)
+                    new_parts_geometry.convertToMultiType()  #sometimes there is only one part
+                    new_parts = new_parts_geometry.asMultiPolygon()
+
+                # Add calculated holes and parts
+                new_geometry = QgsGeometry(previous_geometry)   # copy the previous geometry
+                for hole in new_holes:
+                    new_geometry.addRing(hole[0])
+                if current_holes != []:
+                    for part in new_parts_geometry.constParts():
+                        #TODO: something in the two lines below was causing an immediate crash. Crashes eventually stopped unexpectedly when I restarted QGIS
+                        #print(part)
+                        new_geometry.addPart(part.boundary()) # I don't understand why part is a QgsPolygon, but it is
+                
+                # Change feature geometry to what was calculated above
+                f.setGeometry(new_geometry)
+                self.active_layer.updateFeature(f)
+
+            # Delete all features that new_feature contains
+            contains_features = overlapping_features['contains']
+            for f in contains_features:
+                self.active_layer.deleteFeature(f.id())
+
+            # For all other features, modify their geometry
+            # TODO: revise variable names to match pattern in brushtools.py
+            for f in overlapping_features['partial_overlap']:
                 old_geom = f.geometry()
                 new_geom = old_geom.difference(new_feature.geometry())
                 f.setGeometry(new_geom)
@@ -350,6 +401,7 @@ class Brush:
             self.active_layer.commitChanges(stopEditing=False)
 
         # Delete the instance of new_feature to free up memory
+        # TODO: delete other expensive variables as well
         del new_feature
 
         # Refresh the interface
@@ -361,16 +413,43 @@ class Brush:
         self.resetSB()
     
     def features_overlapping_with(self, feature):
-        """Returns a list of features in self.active_layer that overlap with
-        a given `feature`. Both `feature` and self.adtive_layer must be in
+        """Returns a dict of features in self.active_layer that overlap with
+        a given `feature`. Both `feature` and self.active_layer must be in
         the same CRS.
         
+        The returned dict is of the following form:
+            {
+                'contains':        `feature` contains these features
+                'contained_by':    `feature` is contained by these features
+                'partial_overlap': `feature` only partially overlaps these features
+                'any_overlap':     `feature` has partial or total overlap with these
+                                   features
+            }
+
+        If the two features have equivalent geometries, f is added to "contained_by"
+
         Note: if this method causes performance issues, QgsGeometryEngine
-        may provide more efficient approach.
+        may provide a more efficient approach.
         """
-        overlapping_features = []
+        overlapping_features = {
+            'contains': [],
+            'contained_by': [],
+            'partial_overlap': [],
+            'any_overlap': []
+        }
         for f in self.active_layer.getFeatures():
-            if f.geometry().overlaps(feature.geometry()):
-                overlapping_features.append(f)
+            if feature.geometry().contains(f.geometry()):
+                overlapping_features['contains'].append(f)
+                overlapping_features['any_overlap'].append(f)
+            
+            elif (feature.geometry().within(f.geometry()) or
+                  QgsGeometry.compare(feature.geometry(), f.geometry())):
+                overlapping_features['contained_by'].append(f)
+                overlapping_features['any_overlap'].append(f)            
+            
+            elif feature.geometry().overlaps(f.geometry()):
+                overlapping_features['partial_overlap'].append(f)
+                overlapping_features['any_overlap'].append(f)
+        
         return overlapping_features
 
