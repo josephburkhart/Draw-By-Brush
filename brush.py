@@ -43,6 +43,7 @@ from .brushtools import BrushTool
 class Brush:
     """QGIS Plugin Implementation."""
 
+    #------------------------------- INITIATION -------------------------------
     def __init__(self, iface):
         """Constructor.
 
@@ -91,6 +92,29 @@ class Brush:
         self.pluginIsActive = False
         self.dockwidget = None
 
+    def initGui(self):
+        """Create the menu entries and toolbar icons inside the QGIS GUI."""
+
+        icon_path = ':/plugins/brush/resources/paintbrush.png'
+        self.brush_action = self.add_action(
+            icon_path,
+            text=self.tr(u'Brush Tool'),
+            checkable=True,
+            callback=self.activate_brush_tool,
+            enabled_flag=False,
+            parent=self.iface.mainWindow())
+
+        # Get necessary info whenever active layer changes -- TODO: move to init??
+        self.iface.currentLayerChanged.connect(self.get_active_layer)
+
+        # Save reference to prev map tool whenever brush action is toggled on
+        self.brush_action.toggled.connect(lambda x: self.set_prev_tool(self.brush_action))
+
+        # Only enable brush action if a Polygon or MultiPolygon Vector layer
+        # is selected
+        self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
+
+    #------------------------------ COMMUNICATION -----------------------------
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -104,6 +128,70 @@ class Brush:
         """
         return QCoreApplication.translate('Brush', message)
 
+    def updateSB(self):
+        """Update the status bar"""
+        pass #TODO: placeholder
+
+    def resetSB(self):
+        """Reset the status bar"""
+        message = {
+            'draw_brush': 'Maintain the left click to draw with a brush.'
+        }
+        self.sb.showMessage(self.tr(message[self.tool_name]))
+
+    def set_prev_tool(self, action):
+        """Reset prev_tool to the current active map tool. To be called
+        whenever the action is toggled."""
+        if action.isChecked():
+            self.prev_tool = self.iface.mapCanvas().mapTool()
+
+    #------------------------------- ACTIVATION -------------------------------
+    def activate_brush_tool(self):
+        """Activate and run the brush tool"""
+        # Load and start the plugin
+        if not self.pluginIsActive:
+            self.pluginIsActive = True
+
+        # Reset the tool if another one is active -- TODO: this is not useful
+        if self.tool:
+            self.tool.reset()
+
+        # Initialize and configure self.tool
+        self.tool=BrushTool(self.iface)
+        self.tool.setAction(self.actions[0])
+        self.tool.rbFinished.connect(lambda g: self.draw(g))
+        self.tool.move.connect(self.updateSB)
+        
+        # Select the tool in the current interface
+        self.iface.mapCanvas().setMapTool(self.tool)
+        
+        # Set tool name -- TODO: this is not useful
+        self.tool_name = 'draw_brush'
+
+        # Update tool attribute
+        self.tool.active_layer = self.active_layer
+
+        # Reset the status bar
+        self.resetSB()
+
+
+    def onClosePlugin(self):
+        """Cleanup necessary items here when plugin dockwidget is closed"""
+
+        self.pluginIsActive = False
+
+    def unload(self):
+        """Removes the plugin menu item and icon from QGIS GUI."""
+
+        for action in self.actions:
+            self.iface.removePluginMenu(
+                self.tr(u'&Draw by Brush'),
+                action)
+            self.iface.removeToolBarIcon(action)
+        # remove the toolbar
+        del self.toolbar
+
+    #------------------------------ UPPDATE STATE -----------------------------
     def add_action(
         self,
         icon_path,
@@ -179,29 +267,20 @@ class Brush:
         self.actions.append(action)
 
         return action
-        
-    def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/brush/resources/paintbrush.png'
-        self.brush_action = self.add_action(
-            icon_path,
-            text=self.tr(u'Brush Tool'),
-            checkable=True,
-            callback=self.activate_brush_tool,
-            enabled_flag=False,
-            parent=self.iface.mainWindow())
+    def disable_action(self, action):
+        """Procedure for disabling actions"""
+        # Toggle off
+        action.setChecked(False)  #uncheck
 
-        # Get necessary info whenever active layer changes -- TODO: move to init??
-        self.iface.currentLayerChanged.connect(self.get_active_layer)
+        # Disable the tool
+        action.setEnabled(False)  #disable
 
-        # Save reference to prev map tool whenever brush action is toggled on
-        self.brush_action.toggled.connect(lambda x: self.set_prev_tool(self.brush_action))
+        # Restore previous map tool (if any)
+        # TODO: account for selected layer type
+        if self.prev_tool != None:
+            self.iface.mapCanvas().setMapTool(self.prev_tool)
 
-        # Only enable brush action if a Polygon or MultiPolygon Vector layer
-        # is selected
-        self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
-        
     def enable_brush_action_check(self):
         """Enable/Disable brush action as necessary when different types of
         layers are selected. Tool can only be activated when editing is on."""
@@ -219,92 +298,6 @@ class Brush:
         # Non-polygon layer is selected
         else:
             self.disable_action(self.brush_action)
-    
-    def disable_action(self, action):
-        """Procedure for disabling actions"""
-        # Toggle off
-        action.setChecked(False)  #uncheck
-
-        # Disable the tool
-        action.setEnabled(False)  #disable
-
-        # Restore previous map tool (if any)
-        # TODO: account for selected layer type
-        if self.prev_tool != None:
-            self.iface.mapCanvas().setMapTool(self.prev_tool)
-
-    def get_active_layer(self):
-        """Reset the reference to the current active layer and reconnect 
-        signals to slots as necessary. To be called whenever the active layer changes."""
-        self.active_layer = self.iface.activeLayer()
-        if ((self.active_layer != None) and
-            (self.active_layer.type() == QgsMapLayer.VectorLayer)):
-            self.active_layer.editingStarted.connect(self.enable_brush_action_check)
-            self.active_layer.editingStopped.connect(self.enable_brush_action_check)
-
-    def set_prev_tool(self, action):
-        """Reset prev_tool to the current active map tool. To be called
-        whenever the action is toggled."""
-        if action.isChecked():
-            self.prev_tool = self.iface.mapCanvas().mapTool()
-
-    #--------------------------------------------------------------------------
-    def onClosePlugin(self):
-        """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        self.pluginIsActive = False
-
-
-    def unload(self):
-        """Removes the plugin menu item and icon from QGIS GUI."""
-
-        for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Draw by Brush'),
-                action)
-            self.iface.removeToolBarIcon(action)
-        # remove the toolbar
-        del self.toolbar
-
-    #--------------------------------------------------------------------------
-    def activate_brush_tool(self):
-        """Activate and run the brush tool"""
-        # Load and start the plugin
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
-
-        # Reset the tool if another one is active -- TODO: this is not useful
-        if self.tool:
-            self.tool.reset()
-
-        # Initialize and configure self.tool
-        self.tool=BrushTool(self.iface)
-        self.tool.setAction(self.actions[0])
-        self.tool.rbFinished.connect(lambda g: self.draw(g))
-        self.tool.move.connect(self.updateSB)
-        
-        # Select the tool in the current interface
-        self.iface.mapCanvas().setMapTool(self.tool)
-        
-        # Set tool name -- TODO: this is not useful
-        self.tool_name = 'draw_brush'
-
-        # Update tool attribute
-        self.tool.active_layer = self.active_layer
-
-        # Reset the status bar
-        self.resetSB()
-
-    def resetSB(self):
-        """Reset the status bar"""
-        message = {
-            'draw_brush': 'Maintain the left click to draw with a brush.'
-        }
-        self.sb.showMessage(self.tr(message[self.tool_name]))
-
-    def updateSB(self):
-        """Update the status bar"""
-        pass #TODO: placeholder
 
     def draw(self, g):
         """This is the actual drawing state"""
@@ -406,7 +399,8 @@ class Brush:
         # Clean up at the end
         self.tool.reset()
         self.resetSB()
-    
+
+    #------------------------------- CALCULATION ------------------------------
     def features_overlapping_with(self, feature):
         """Returns a dict of features in self.active_layer that overlap with
         a given `feature`. Both `feature` and self.active_layer must be in
@@ -448,3 +442,11 @@ class Brush:
         
         return overlapping_features
 
+    def get_active_layer(self):
+        """Reset the reference to the current active layer and reconnect 
+        signals to slots as necessary. To be called whenever the active layer changes."""
+        self.active_layer = self.iface.activeLayer()
+        if ((self.active_layer != None) and
+            (self.active_layer.type() == QgsMapLayer.VectorLayer)):
+            self.active_layer.editingStarted.connect(self.enable_brush_action_check)
+            self.active_layer.editingStopped.connect(self.enable_brush_action_check)
