@@ -92,10 +92,17 @@ class BrushTool(QgsMapTool):
         # Reset the rubberband
         self.reset()
 
+    #---------------------------ACTIVATION-------------------------------------
     def activate(self):
         """Run when tool is activated"""        #TODO: wrap this into __init__?
         self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
 
+    def deactivate(self):
+        self.rb.reset(True)
+        self.tab_shortcut.setEnabled(False)
+        QgsMapTool.deactivate(self)
+
+    #------------------------UPDATE STATE--------------------------------------
     def make_cursor(self, shape, radius, angle):
         """Sets the cursor to be a red circle scaled to a radius in px and
         rotated by an angle in degrees."""
@@ -110,6 +117,37 @@ class BrushTool(QgsMapTool):
         brush_cursor=QCursor(xformed_pixmap)
         self.canvas.setCursor(brush_cursor)
 
+    def switch_brush_shape(self):
+        """Switch between the different brush shapes."""
+        new_brush_index = self.brush_shapes.index(self.brush_shape) + 1
+        if new_brush_index > len(self.brush_shapes) - 1:
+            new_brush_index = 0
+        self.brush_shape = self.brush_shapes[new_brush_index]
+        self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
+
+    def check_coordinate_systems(self):
+        """Check if reprojection is necessary. If it is, update the
+        reprojection flag and prepare the necessary transformation.
+        
+        Modifies:
+            self.reproject_necessary
+            self.t
+        """
+        self.active_layer = self.iface.activeLayer()
+        if self.active_layer != None: 
+            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
+                self.reproject_necessary = True
+                self.t = QgsCoordinateTransform(
+                    self.canvas.project().crs(),
+                    self.active_layer.sourceCrs(),
+                    QgsProject.instance()
+                )
+
+    def reset(self):
+        self.prev_point = None
+        self.rb.reset(QgsWkbTypes.PolygonGeometry)
+
+    #---------------------------INTERACTION------------------------------------
     def wheelEvent(self, event):
         """If shift is pressed, rescale brush radius and redraw the cursor.
         If ctrl+shift is pressed, rotate and redraw the cursor."""
@@ -124,105 +162,6 @@ class BrushTool(QgsMapTool):
             d = event.angleDelta().y()
             self.brush_angle += d/50
             self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
-
-    def switch_brush_shape(self):
-        """Switch between the different brush shapes."""
-        new_brush_index = self.brush_shapes.index(self.brush_shape) + 1
-        if new_brush_index > len(self.brush_shapes) - 1:
-            new_brush_index = 0
-        self.brush_shape = self.brush_shapes[new_brush_index]
-        self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
-
-    def reset(self):
-        self.prev_point = None
-        self.rb.reset(QgsWkbTypes.PolygonGeometry)
-
-    def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
-        """
-        Creates a circular QgsGeometry centered on a point with the given 
-        radius and num_points
-
-        :type center: qgis.core.QgsPoint
-        :param center: canvas point, in layer crs
-        :type radius: float
-        :param radius: cicle radius, considered to be in layer units
-        :type num_points: int
-        :param num_points: number of vertices
-        :type map_units: bool
-        :param map_units: whether the radius should be considered in map units
-        :return: QgsGeometry of type QGis.Polygon
-
-        Adapted from https://gis.stackexchange.com/a/69792
-        """
-        if not radius:
-            radius = self.brush_radius #default brush radius
-        
-        if not map_units:
-            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
-            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
-            radius *= context.mapToPixel().mapUnitsPerPixel()
-        if not num_points:
-            num_points = self.brush_points
-
-        points = []
-
-        for i in range(num_points-1):
-            theta = i * (2.0 * pi / (num_points-1))
-            p = QgsPointXY(center.x() + radius * cos(theta),
-                         center.y() + radius * sin(theta))
-            points.append(p)
-        
-        return QgsGeometry.fromPolygonXY([points])
-
-    def wedge_around_point(self, center, radius=0, theta=0, map_units=False):
-        """Creates wedge shape around a central point with a given radius,
-        rotates by an angle.
-        
-        Geometry matches :/plugins/brush/resources/redwedge_500x500.png."""
-        if not radius:
-            radius = self.brush_radius #default brush radius
-        
-        if not theta:  #TODO: remove checks like this (maybe remove to general module)
-            theta = self.brush_angle
-
-        if not map_units:
-            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
-            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
-            radius *= context.mapToPixel().mapUnitsPerPixel()
-
-        # Convert theta to radians
-        theta = theta*(pi/180)
-
-        # Unrotated Points
-        p1_x = center.x()
-        p1_y = center.y() + radius
-        
-        p2_x = center.x() + (radius/2)
-        p2_y = center.y() - (radius/2)
-
-        p3_x = center.x() - (radius/2)
-        p3_y = center.y() - (radius/2)
-
-        # Rotated Points
-        # TODO: maybe make the geometry with the above points and then rotate using
-        #       QgsGeometry method. This would be easier to read for collaborators
-        p1_x_r =    (p1_x - center.x())*cos(theta) + (p1_y - center.y())*sin(theta) + center.x()
-        p1_y_r = -1*(p1_x - center.x())*sin(theta) + (p1_y - center.y())*cos(theta) + center.y()
-
-        p2_x_r =    (p2_x - center.x())*cos(theta) + (p2_y - center.y())*sin(theta) + center.x()
-        p2_y_r = -1*(p2_x - center.x())*sin(theta) + (p2_y - center.y())*cos(theta) + center.y()
-
-        p3_x_r =    (p3_x - center.x())*cos(theta) + (p3_y - center.y())*sin(theta) + center.x()
-        p3_y_r = -1*(p3_x - center.x())*sin(theta) + (p3_y - center.y())*cos(theta) + center.y()
-
-        points = [
-            QgsPointXY(p1_x_r, p1_y_r),
-            QgsPointXY(p2_x_r, p2_y_r),
-            QgsPointXY(p3_x_r, p3_y_r)
-        ]
-
-        return QgsGeometry.fromPolygonXY([points])
-
 
     def canvasPressEvent(self, event):
         """
@@ -343,27 +282,92 @@ class BrushTool(QgsMapTool):
         self.drawing_mode = 'inactive'
 
         self.merging = False
-
-    def check_coordinate_systems(self):
-        """Check if reprojection is necessary. If it is, update the
-        reprojection flag and prepare the necessary transformation.
-        
-        Modifies:
-            self.reproject_necessary
-            self.t
+    
+    #---------------------------CALCULATION------------------------------------
+    def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
         """
-        self.active_layer = self.iface.activeLayer()
-        if self.active_layer != None: 
-            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
-                self.reproject_necessary = True
-                self.t = QgsCoordinateTransform(
-                    self.canvas.project().crs(),
-                    self.active_layer.sourceCrs(),
-                    QgsProject.instance()
-                )
+        Creates a circular QgsGeometry centered on a point with the given 
+        radius and num_points
+
+        :type center: qgis.core.QgsPoint
+        :param center: canvas point, in layer crs
+        :type radius: float
+        :param radius: cicle radius, considered to be in layer units
+        :type num_points: int
+        :param num_points: number of vertices
+        :type map_units: bool
+        :param map_units: whether the radius should be considered in map units
+        :return: QgsGeometry of type QGis.Polygon
+
+        Adapted from https://gis.stackexchange.com/a/69792
+        """
+        if not radius:
+            radius = self.brush_radius #default brush radius
+        
+        if not map_units:
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+        if not num_points:
+            num_points = self.brush_points
+
+        points = []
+
+        for i in range(num_points-1):
+            theta = i * (2.0 * pi / (num_points-1))
+            p = QgsPointXY(center.x() + radius * cos(theta),
+                         center.y() + radius * sin(theta))
+            points.append(p)
+        
+        return QgsGeometry.fromPolygonXY([points])
+
+    def wedge_around_point(self, center, radius=0, theta=0, map_units=False):
+        """Creates wedge shape around a central point with a given radius,
+        rotates by an angle.
+        
+        Geometry matches :/plugins/brush/resources/redwedge_500x500.png."""
+        if not radius:
+            radius = self.brush_radius #default brush radius
+        
+        if not theta:  #TODO: remove checks like this (maybe remove to general module)
+            theta = self.brush_angle
+
+        if not map_units:
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+
+        # Convert theta to radians
+        theta = theta*(pi/180)
+
+        # Unrotated Points
+        p1_x = center.x()
+        p1_y = center.y() + radius
+        
+        p2_x = center.x() + (radius/2)
+        p2_y = center.y() - (radius/2)
+
+        p3_x = center.x() - (radius/2)
+        p3_y = center.y() - (radius/2)
+
+        # Rotated Points
+        # TODO: maybe make the geometry with the above points and then rotate using
+        #       QgsGeometry method. This would be easier to read for collaborators
+        p1_x_r =    (p1_x - center.x())*cos(theta) + (p1_y - center.y())*sin(theta) + center.x()
+        p1_y_r = -1*(p1_x - center.x())*sin(theta) + (p1_y - center.y())*cos(theta) + center.y()
+
+        p2_x_r =    (p2_x - center.x())*cos(theta) + (p2_y - center.y())*sin(theta) + center.x()
+        p2_y_r = -1*(p2_x - center.x())*sin(theta) + (p2_y - center.y())*cos(theta) + center.y()
+
+        p3_x_r =    (p3_x - center.x())*cos(theta) + (p3_y - center.y())*sin(theta) + center.x()
+        p3_y_r = -1*(p3_x - center.x())*sin(theta) + (p3_y - center.y())*cos(theta) + center.y()
+
+        points = [
+            QgsPointXY(p1_x_r, p1_y_r),
+            QgsPointXY(p2_x_r, p2_y_r),
+            QgsPointXY(p3_x_r, p3_y_r)
+        ]
+
+        return QgsGeometry.fromPolygonXY([points])
 
 
-    def deactivate(self):
-        self.rb.reset(True)
-        self.tab_shortcut.setEnabled(False)
-        QgsMapTool.deactivate(self)
