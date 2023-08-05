@@ -89,6 +89,18 @@ class Brush:
         self.toolbar = self.iface.addToolBar(u'Brush')
         self.toolbar.setObjectName(u'Brush')
 
+        self.explanation1 = (u'- Left-click to draw\n'+
+                        	 u'- Right-click to erase\n'+
+                             u'- Shift + scroll to re-scale the brush\n'+
+                             u'- Shift + Ctrl + Scroll to rotate the brush\n'+
+                             u'- Tab to change the brush shape')
+
+        self.explanation2 = (u'Left-click to draw, '+
+                        	 u'Right-click to erase, '+
+                             u'Shift + scroll to re-scale, '+
+                             u'Shift + Ctrl + Scroll to rotate, '+
+                             u'Tab to change shape')
+
         self.pluginIsActive = False
         self.dockwidget = None
 
@@ -97,10 +109,11 @@ class Brush:
         icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.brush_action = self.add_action(
             icon_path,
-            text=self.tr(u'Brush Tool'),
+            text=self.tr(u'Brush Tool\n\n'+self.explanation1),
             checkable=True,
             callback=self.activate_brush_tool,
             enabled_flag=False,
+            status_tip=self.tr(u'Brush Tool:\t'+self.explanation2),
             parent=self.iface.mainWindow())
 
         # Get necessary info whenever active layer changes -- TODO: move to init??
