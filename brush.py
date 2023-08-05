@@ -94,7 +94,6 @@ class Brush:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
         icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.brush_action = self.add_action(
             icon_path,
@@ -176,12 +175,10 @@ class Brush:
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
-
         self.pluginIsActive = False
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&Draw by Brush'),
@@ -242,7 +239,6 @@ class Brush:
             added to self.actions list.
         :rtype: QAction
         """
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -283,7 +279,6 @@ class Brush:
     def enable_brush_action_check(self):
         """Enable/Disable brush action as necessary when different types of
         layers are selected. Tool can only be activated when editing is on."""
-
         # No layer is selected
         if self.active_layer == None:
             self.disable_action(self.brush_action)
