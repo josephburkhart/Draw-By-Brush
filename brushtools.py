@@ -61,33 +61,34 @@ class BrushTool(QgsMapTool):
         self.canvas = iface.mapCanvas()
         self.iface = iface
         self.active_layer = iface.activeLayer()
-        
-        # Set reprojection flag if active_layer has different crs from map canvas
-        self.reproject_necessary = False
-        self.check_coordinate_systems()
-        
-        # Configure Rubber Band for Drawing
-        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
-        self.rb.setWidth(1)
 
-        # Set default brush parameters
-        self.brush_radius = 120 #originally 40
-        self.brush_points = 64
+        # Set other instance attributes
+        self.brush_radius = 120                 # default brush parameters
+        self.brush_points = 24
         self.brush_angle = 0
         self.brush_shapes = ['circle', 'wedge']
         self.brush_shape = self.brush_shapes[0]
 
+        self.draw_color = QColor(0,0,255,127)    # default tool colors
+        self.erase_color = QColor(255,0,0,127)
+
+        self.t = None                            # coordinate transform
+
+        # Set flags
         self.drawing_mode = 'free'
-
         self.merging = False
+        self.reproject_necessary = False
 
-        # Shortcut
+        # Set shortcuts
         self.tab_shortcut = QShortcut(QKeySequence(Qt.Key_Tab), self.iface.mainWindow())
         self.tab_shortcut.activated.connect(self.switch_brush_shape)
-
-        # Set default tool colors
-        self.draw_color = QColor(0,0,255,127)    # transparent blue
-        self.erase_color = QColor(255,0,0,127)   # transparent red
+        
+        # Check if reprojection is necessary and if so update flags and attributes
+        self.check_coordinate_systems()
+        
+        # Configure rubberband for drawing
+        self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
+        self.rb.setWidth(1)
 
         # Reset the rubberband
         self.reset()
