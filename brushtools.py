@@ -340,7 +340,7 @@ class BrushTool(QgsMapTool):
         radius = self.brush_radius
         radius *= context.mapToPixel().mapUnitsPerPixel()
 
-        tolerance = (2*pi*radius)/(8*self.brush_points)
+        tolerance = (2*pi*radius)/(24*self.brush_points)
 
         new_geom = new_geom.simplify(tolerance)
         
