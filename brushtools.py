@@ -342,7 +342,7 @@ class BrushTool(QgsMapTool):
 
         tolerance = (2*pi*radius)/(8*self.brush_points)
 
-        new_geom.simplify(tolerance)
+        new_geom = new_geom.simplify(tolerance)
         
         # Emit final geometry
         self.rbFinished.emit(new_geom)
