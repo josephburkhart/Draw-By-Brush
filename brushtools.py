@@ -64,14 +64,7 @@ class BrushTool(QgsMapTool):
         
         # Set reprojection flag if active_layer has different crs from map canvas
         self.reproject_necessary = False
-        if self.active_layer != None:
-            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
-                self.reproject_necessary = True
-                self.t = QgsCoordinateTransform(
-                    self.canvas.project().crs(),
-                    self.active_layer.sourceCrs(),
-                    QgsProject.instance()
-                )
+        self.check_coordinate_systems()
         
         # Configure Rubber Band for Drawing
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
@@ -241,14 +234,9 @@ class BrushTool(QgsMapTool):
 
         # Update reference to active layer
         self.active_layer = self.iface.activeLayer()
-        if self.active_layer != None: 
-            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
-                self.reproject_necessary = True
-                self.t = QgsCoordinateTransform(
-                    self.canvas.project().crs(),
-                    self.active_layer.sourceCrs(),
-                    QgsProject.instance()
-                )
+        
+        # Check for reprojection and if so update flags and attributes
+        self.check_coordinate_systems()
 
         # Set status and color
         if event.button() == Qt.LeftButton:
@@ -355,6 +343,25 @@ class BrushTool(QgsMapTool):
         self.drawing_mode = 'free'
 
         self.merging = False
+
+    def check_coordinate_systems(self):
+        """Check if reprojection is necessary. If it is, update the
+        reprojection flag and prepare the necessary transformation.
+        
+        Modifies:
+            self.reproject_necessary
+            self.t
+        """
+        self.active_layer = self.iface.activeLayer()
+        if self.active_layer != None: 
+            if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
+                self.reproject_necessary = True
+                self.t = QgsCoordinateTransform(
+                    self.canvas.project().crs(),
+                    self.active_layer.sourceCrs(),
+                    QgsProject.instance()
+                )
+
 
     def deactivate(self):
         self.rb.reset(True)
