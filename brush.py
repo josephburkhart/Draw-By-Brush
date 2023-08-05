@@ -174,7 +174,6 @@ class Brush:
         # Reset the status bar
         self.resetSB()
 
-
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 

@@ -53,6 +53,7 @@ class BrushTool(QgsMapTool):
     move = pyqtSignal()
     rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
 
+    #------------------------------- INITIATION -------------------------------
     def __init__(self, iface):
         QgsMapTool.__init__(self, iface.mapCanvas())
 
@@ -92,7 +93,7 @@ class BrushTool(QgsMapTool):
         # Reset the rubberband
         self.reset()
 
-    #---------------------------ACTIVATION-------------------------------------
+    #------------------------------- ACTIVATION -------------------------------
     def activate(self):
         """Run when tool is activated"""        #TODO: wrap this into __init__?
         self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
@@ -102,7 +103,7 @@ class BrushTool(QgsMapTool):
         self.tab_shortcut.setEnabled(False)
         QgsMapTool.deactivate(self)
 
-    #------------------------UPDATE STATE--------------------------------------
+    #------------------------------ UPPDATE STATE -----------------------------
     def make_cursor(self, shape, radius, angle):
         """Sets the cursor to be a red circle scaled to a radius in px and
         rotated by an angle in degrees."""
@@ -147,7 +148,7 @@ class BrushTool(QgsMapTool):
         self.prev_point = None
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
 
-    #---------------------------INTERACTION------------------------------------
+    #------------------------------- INTERACTION ------------------------------
     def wheelEvent(self, event):
         """If shift is pressed, rescale brush radius and redraw the cursor.
         If ctrl+shift is pressed, rotate and redraw the cursor."""
@@ -283,7 +284,7 @@ class BrushTool(QgsMapTool):
 
         self.merging = False
     
-    #---------------------------CALCULATION------------------------------------
+    #------------------------------- CALCULATION ------------------------------
     def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
         """
         Creates a circular QgsGeometry centered on a point with the given 
