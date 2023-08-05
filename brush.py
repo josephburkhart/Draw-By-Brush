@@ -156,7 +156,7 @@ class Brush:
             self.tool.reset()
 
         # Initialize and configure self.tool
-        self.tool=BrushTool(self.iface)
+        self.tool = BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
         self.tool.rbFinished.connect(lambda g: self.draw(g))
         self.tool.move.connect(self.updateSB)
