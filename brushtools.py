@@ -75,7 +75,7 @@ class BrushTool(QgsMapTool):
         self.t = None                            # coordinate transform
 
         # Set flags
-        self.drawing_mode = 'free'
+        self.drawing_mode = 'inactive'
         self.merging = False
         self.reproject_necessary = False
 
@@ -341,7 +341,7 @@ class BrushTool(QgsMapTool):
         self.reset()
         self.canvas.refresh()
 
-        self.drawing_mode = 'free'
+        self.drawing_mode = 'inactive'
 
         self.merging = False
 
