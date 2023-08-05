@@ -113,9 +113,9 @@ class BrushTool(QgsMapTool):
         elif shape == 'wedge':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redwedge_500x500.png')
         scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
-        xform = QTransform().rotate(angle)
-        xformed_pixmap = scaled_pixmap.transformed(xform)
-        brush_cursor=QCursor(xformed_pixmap)
+        transformation = QTransform().rotate(angle)
+        transformed_pixmap = scaled_pixmap.transformed(transformation)
+        brush_cursor=QCursor(transformed_pixmap)
         self.canvas.setCursor(brush_cursor)
 
     def switch_brush_shape(self):

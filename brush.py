@@ -293,14 +293,14 @@ class Brush:
         else:
             self.disable_action(self.brush_action)
 
-    def draw(self, g):
+    def draw(self, emmitted_geometry):
         """This is the actual drawing state"""
         # Get current active layer used in the drawing tool
         self.active_layer = self.tool.active_layer
 
         # Create new feature
         new_feature = QgsFeature()
-        new_feature.setGeometry(g)
+        new_feature.setGeometry(emmitted_geometry)
 
         # If drawing, add new feature
         if self.tool.drawing_mode == 'drawing_with_brush':
@@ -375,9 +375,9 @@ class Brush:
             # For all other features, modify their geometry
             # TODO: revise variable names to match pattern in brushtools.py
             for f in overlapping_features['partial_overlap']:
-                old_geom = f.geometry()
-                new_geom = old_geom.difference(new_feature.geometry())
-                f.setGeometry(new_geom)
+                previous_geometry = f.geometry()
+                new_geometry = previous_geometry.difference(new_feature.geometry())
+                f.setGeometry(new_geometry)
                 self.active_layer.updateFeature(f)
 
             self.active_layer.commitChanges(stopEditing=False)
