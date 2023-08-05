@@ -50,7 +50,6 @@ class BrushTool(QgsMapTool):
     Patterned off of `drawtools.py` from the qdraw plugin.
     """
     # Make signals for movement and end of selection and end of drawing
-    selectionDone = pyqtSignal()
     move = pyqtSignal()
     rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
 

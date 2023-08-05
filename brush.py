@@ -285,7 +285,6 @@ class Brush:
         # Initialize and configure self.tool
         self.tool=BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
-        #self.tool.selectionDone.connect(self.draw)
         self.tool.rbFinished.connect(lambda g: self.draw(g))
         self.tool.move.connect(self.updateSB)
         
