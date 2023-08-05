@@ -119,16 +119,14 @@ class BrushTool(QgsMapTool):
 
     def wheelEvent(self, event):
         """If shift is pressed, rescale brush radius and redraw the cursor.
-        If ctrl+shift is pressed, rotate and redraw the cursor.
-        If alt is pressed, toggle the brush shape."""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ShiftModifier:
+        If ctrl+shift is pressed, rotate and redraw the cursor."""
+        if event.modifiers() == Qt.ShiftModifier:
             event.accept()
             d = event.angleDelta().y()
             self.brush_radius *= 1 + d/1000  #TODO: account for high-dpi mice
             self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
         
-        elif modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             event.accept()
             d = event.angleDelta().y()
             self.brush_angle += d/50
