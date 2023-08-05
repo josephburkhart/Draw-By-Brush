@@ -347,6 +347,7 @@ class Brush:
             for f in contained_by_features:
                 # Get current and previous geometries
                 current_geometry = new_feature.geometry()
+                current_geometry.convertToMultiType() #sometimes there is only one part
                 current_polygon = current_geometry.asMultiPolygon()[0]  #TODO: I don't know why it's multipolygon instead of polygon...
                 current_exterior = current_polygon[0]
                 current_holes = current_polygon[1:] 
