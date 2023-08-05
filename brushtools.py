@@ -33,7 +33,7 @@ from qgis.core import QgsWkbTypes, QgsPointXY, QgsPoint, QgsGeometry, \
 from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal, QPoint
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, \
     QGridLayout, QLabel, QGroupBox, QVBoxLayout, QComboBox, QPushButton, \
-    QInputDialog, QApplication
+    QInputDialog, QApplication, QShortcut
 from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence, \
     QPixmap, QCursor, QPainter, QColor, QTransform
 
@@ -81,11 +81,16 @@ class BrushTool(QgsMapTool):
         self.brush_radius = 120 #originally 40
         self.brush_points = 64
         self.brush_angle = 0
-        self.brush_shape = 'wedge'
+        self.brush_shapes = ['circle', 'wedge']
+        self.brush_shape = self.brush_shapes[0]
 
         self.drawing_mode = 'free'
 
         self.merging = False
+
+        # Shortcut
+        self.tab_shortcut = QShortcut(QKeySequence(Qt.Key_Tab), self.iface.mainWindow())
+        self.tab_shortcut.activated.connect(self.switch_brush_shape)
 
         # Set default tool colors
         self.draw_color = QColor(0,0,255,127)    # transparent blue
@@ -128,16 +133,14 @@ class BrushTool(QgsMapTool):
             d = event.angleDelta().y()
             self.brush_angle += d/50
             self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
-        
-        elif modifiers == (Qt.AltModifier):
-            print(f'brush shape changed from {self.brush_shape} to ', end='')
-            if self.brush_shape == 'circle':
-                self.brush_shape = 'wedge'
-            elif self.brush_shape == 'wedge':
-                self.brush_shape = 'circle'
-            print(self.brush_shape)
-            self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
 
+    def switch_brush_shape(self):
+        """Switch between the different brush shapes."""
+        new_brush_index = self.brush_shapes.index(self.brush_shape) + 1
+        if new_brush_index > len(self.brush_shapes) - 1:
+            new_brush_index = 0
+        self.brush_shape = self.brush_shapes[new_brush_index]
+        self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
 
     def reset(self):
         self.prev_point = None
@@ -357,4 +360,5 @@ class BrushTool(QgsMapTool):
 
     def deactivate(self):
         self.rb.reset(True)
+        self.tab_shortcut.setEnabled(False)
         QgsMapTool.deactivate(self)
