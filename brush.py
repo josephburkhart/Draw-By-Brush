@@ -85,14 +85,12 @@ class Brush:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Draw by Brush')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'Brush')
         self.toolbar.setObjectName(u'Brush')
 
         self.pluginIsActive = False
         self.dockwidget = None
 
-    # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -104,9 +102,7 @@ class Brush:
         :returns: Translated version of message.
         :rtype: QString
         """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('Brush', message)
-
 
     def add_action(
         self,
@@ -183,8 +179,7 @@ class Brush:
         self.actions.append(action)
 
         return action
-
-
+        
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
