@@ -106,11 +106,12 @@ class Brush:
         icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.brush_action = self.add_action(
             icon_path,
-            text=self.tr(u'Brush Tool\n\n'+self.explanation1),
+            text=self.tr(u'Brush Tool'),
             checkable=True,
             callback=self.activate_brush_tool,
             enabled_flag=False,
             status_tip=self.tr(u'Brush Tool:\t'+self.explanation2),
+            tool_tip=self.tr(u'Brush Tool\n\n'+self.explanation1),
             parent=self.iface.mainWindow())
 
         # Get necessary info whenever active layer changes -- TODO: move to init??
@@ -203,6 +204,7 @@ class Brush:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
+        tool_tip=None,
         menu=None,
         parent=None):
         """Add a toolbar icon to the toolbar.
@@ -254,6 +256,9 @@ class Brush:
 
         if whats_this is not None:
             action.setWhatsThis(whats_this)
+        
+        if tool_tip is not None:
+            action.setToolTip(tool_tip)
 
         if add_to_toolbar:
             self.toolbar.addAction(action)
