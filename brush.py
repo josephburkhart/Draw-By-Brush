@@ -148,7 +148,7 @@ class Brush:
     def resetSB(self):
         """Reset the status bar"""
         message = {
-            'draw_brush': 'Maintain the left click to draw with a brush.'
+            'draw_brush': self.explanation2
         }
         self.sb.showMessage(self.tr(message[self.tool_name]))
 
