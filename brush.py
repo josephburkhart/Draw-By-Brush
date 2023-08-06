@@ -123,8 +123,7 @@ class Brush:
         self.brush_action.toggled.connect(lambda x: self.set_previous_tool(self.brush_action))
 
         # Only enable brush action if a Polygon or MultiPolygon Vector layer is selected
-        self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
-
+        self.iface.currentLayerChanged.connect(self.brush_action_requirements_check)
 
     #------------------------------ COMMUNICATION -----------------------------
     def tr(self, message):
@@ -287,7 +286,7 @@ class Brush:
         if self.previous_tool != None:
             self.iface.mapCanvas().setMapTool(self.previous_tool)
 
-    def enable_brush_action_check(self):
+    def brush_action_requirements_check(self):
         """Enable/Disable brush action as necessary when different types of
         layers are selected. Tool can only be activated when editing is on."""
         # No layer is selected
@@ -459,5 +458,5 @@ class Brush:
         self.active_layer = self.iface.activeLayer()
         if ((self.active_layer != None) and
             (self.active_layer.type() == QgsMapLayer.VectorLayer)):
-            self.active_layer.editingStarted.connect(self.enable_brush_action_check)
-            self.active_layer.editingStopped.connect(self.enable_brush_action_check)
+            self.active_layer.editingStarted.connect(self.brush_action_requirements_check)
+            self.active_layer.editingStopped.connect(self.brush_action_requirements_check)
