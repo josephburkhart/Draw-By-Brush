@@ -103,6 +103,7 @@ class Brush:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        # Create Brush Action
         icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.brush_action = self.add_action(
             icon_path,
@@ -113,16 +114,17 @@ class Brush:
             status_tip=self.tr(u'Brush Tool:\t'+self.explanation2),
             tool_tip=self.tr(u'Brush Tool\n\n'+self.explanation1),
             parent=self.iface.mainWindow())
-
-        # Get necessary info whenever active layer changes -- TODO: move to init??
+        
+        # Connect necessary signals and slots
+        # Get necessary info whenever active layer changes
         self.iface.currentLayerChanged.connect(self.get_active_layer)
 
-        # Save reference to prev map tool whenever brush action is toggled on
+        # Save reference to previous map tool whenever brush action is activated
         self.brush_action.toggled.connect(lambda x: self.set_previous_tool(self.brush_action))
 
-        # Only enable brush action if a Polygon or MultiPolygon Vector layer
-        # is selected
+        # Only enable brush action if a Polygon or MultiPolygon Vector layer is selected
         self.iface.currentLayerChanged.connect(self.enable_brush_action_check)
+
 
     #------------------------------ COMMUNICATION -----------------------------
     def tr(self, message):
