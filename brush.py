@@ -43,7 +43,7 @@ from .brushtools import BrushTool
 class Brush:
     """QGIS Plugin Implementation."""
 
-    #------------------------------- INITIATION -------------------------------
+    #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
         """Constructor.
 

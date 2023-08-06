@@ -53,7 +53,7 @@ class BrushTool(QgsMapTool):
     move = pyqtSignal()
     rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
 
-    #------------------------------- INITIATION -------------------------------
+    #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
         QgsMapTool.__init__(self, iface.mapCanvas())
 
