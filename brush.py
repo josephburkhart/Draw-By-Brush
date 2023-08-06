@@ -64,8 +64,6 @@ class Brush:
         self.previous_tool = None
         self.active_layer = None
 
-        self.layer_color = QColor(60, 151, 255, 127)
-
         self.sb = self.iface.statusBarIface()
 
         # initialize plugin directory
@@ -102,7 +100,6 @@ class Brush:
                              u'Tab to change shape')
 
         self.pluginIsActive = False
-        self.dockwidget = None
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
