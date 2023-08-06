@@ -151,12 +151,6 @@ class Brush:
         }
         self.sb.showMessage(self.tr(message[self.tool_name]))
 
-    def set_prev_tool(self, action):
-        """Reset prev_tool to the current active map tool. To be called
-        whenever the action is toggled."""
-        if action.isChecked():
-            self.prev_tool = self.iface.mapCanvas().mapTool()
-
     #------------------------------- ACTIVATION -------------------------------
     def activate_brush_tool(self):
         """Activate and run the brush tool"""
@@ -406,6 +400,12 @@ class Brush:
         # Clean up at the end
         self.tool.reset()
         self.resetSB()
+
+    def set_prev_tool(self, action):
+        """Reset prev_tool to the current active map tool. To be called
+        whenever the action is toggled."""
+        if action.isChecked():
+            self.prev_tool = self.iface.mapCanvas().mapTool()
 
     #------------------------------- CALCULATION ------------------------------
     def features_overlapping_with(self, feature):
