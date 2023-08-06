@@ -62,6 +62,7 @@ class Brush:
         self.tool = None
         self.tool_name = None
         self.prev_tool = None
+        self.previous_tool = None
         self.active_layer = None
 
         self.layer_color = QColor(60, 151, 255, 127)
@@ -120,7 +121,7 @@ class Brush:
         self.iface.currentLayerChanged.connect(self.get_active_layer)
 
         # Save reference to prev map tool whenever brush action is toggled on
-        self.brush_action.toggled.connect(lambda x: self.set_prev_tool(self.brush_action))
+        self.brush_action.toggled.connect(lambda x: self.set_previous_tool(self.brush_action))
 
         # Only enable brush action if a Polygon or MultiPolygon Vector layer
         # is selected
@@ -280,8 +281,8 @@ class Brush:
 
         # Restore previous map tool (if any)
         # TODO: account for selected layer type
-        if self.prev_tool != None:
-            self.iface.mapCanvas().setMapTool(self.prev_tool)
+        if self.previous_tool != None:
+            self.iface.mapCanvas().setMapTool(self.previous_tool)
 
     def enable_brush_action_check(self):
         """Enable/Disable brush action as necessary when different types of
@@ -401,11 +402,11 @@ class Brush:
         self.tool.reset()
         self.resetSB()
 
-    def set_prev_tool(self, action):
-        """Reset prev_tool to the current active map tool. To be called
+    def set_previous_tool(self, action):
+        """Reset previous_tool to the current active map tool. To be called
         whenever the action is toggled."""
         if action.isChecked():
-            self.prev_tool = self.iface.mapCanvas().mapTool()
+            self.previous_tool = self.iface.mapCanvas().mapTool()
 
     #------------------------------- CALCULATION ------------------------------
     def features_overlapping_with(self, feature):
