@@ -61,7 +61,6 @@ class Brush:
         # Save additional references
         self.tool = None
         self.tool_name = None
-        self.prev_tool = None
         self.previous_tool = None
         self.active_layer = None
 
