@@ -84,8 +84,8 @@ class Brush:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Draw by Brush')
-        self.toolbar = self.iface.addToolBar(u'Brush')
-        self.toolbar.setObjectName(u'Brush')
+        self.toolbar = self.iface.addToolBar(u'Draw by Brush')
+        self.toolbar.setObjectName(u'Draw by Brush')
 
         self.explanation1 = (u'- Left-click to draw\n'+
                         	 u'- Right-click to erase\n'+
