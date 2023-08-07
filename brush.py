@@ -71,8 +71,8 @@ class Brush:
     Methods:
         initGui: Create the menu entries and toolbar icons inside the QGIS GUI.
         tr: Translate a string using Qt translation API.
-        updateSB: Update the status bar.
-        resetSB: Reset the status bar.
+        updateSB: Update the status bar. Only useful with multiple tools.
+        resetSB: Reset the status bar. Only useful with multiple tools.
         activate_brush_tool: Activate the brush tool.
         onClosePlugin: Clean up necessary items when dockwidget is closed.
         unload: Clean up necessary items when the plugin is unloaded.
@@ -169,7 +169,7 @@ class Brush:
         # Get necessary info whenever active layer changes
         self.iface.currentLayerChanged.connect(self.get_active_layer)
 
-        # Save reference to previous map tool whenever brush action is activated
+        # Save reference to previous map tool whenever brush action is activated -- TODO: check that toggled is the correct signal here
         self.brush_action.toggled.connect(lambda x: self.set_previous_tool(self.brush_action))
 
         # Only enable brush action if a Polygon or MultiPolygon Vector layer is selected
@@ -188,11 +188,17 @@ class Brush:
         return QCoreApplication.translate('Brush', message)
 
     def updateSB(self):
-        """Update the status bar"""
+        """Update the status bar.
+        
+        Note: This is only really useful if the plugin has multiple QActions.
+        """
         pass #TODO: placeholder
 
     def resetSB(self):
-        """Reset the status bar"""
+        """Reset the status bar.
+
+        Note: This is only really useful if the plugin has multiple QActions.
+        """
         message = {
             'draw_brush': self.explanation2
         }
