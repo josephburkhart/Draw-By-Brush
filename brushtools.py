@@ -102,7 +102,7 @@ class BrushTool(QgsMapTool):
 
     """
     # Make signals for movement and end of selection and end of drawing
-    rb_finished = pyqtSignal(QgsGeometry)    # from BeePen
+    rb_finished = pyqtSignal(QgsGeometry)
 
     #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
@@ -166,7 +166,6 @@ class BrushTool(QgsMapTool):
     #------------------------------ UPPDATE STATE -----------------------------
     def make_cursor(self, shape, radius, angle):
         """Render the cursor based on brush shape and size attributes."""
-        # Set cursor shape and size
         if shape == 'circle':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
         elif shape == 'wedge':
@@ -422,7 +421,7 @@ class BrushTool(QgsMapTool):
             A QgsGeometry (of type QGis.Polygon) of a wedge.
         """
         if not radius:
-            radius = self.brush_radius #default brush radius
+            radius = self.brush_radius
         
         if not theta:
             theta = self.brush_angle
