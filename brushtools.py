@@ -168,20 +168,26 @@ class BrushTool(QgsMapTool):
         """Render the cursor based on brush shape and size attributes."""
         if shape == 'circle':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
+        
         elif shape == 'wedge':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redwedge_500x500.png')
+        
         scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
         transformation = QTransform().rotate(angle)
         transformed_pixmap = scaled_pixmap.transformed(transformation)
-        brush_cursor=QCursor(transformed_pixmap)
+        brush_cursor = QCursor(transformed_pixmap)
+        
         self.canvas.setCursor(brush_cursor)
 
     def switch_brush_shape(self):
         """Switch the brush to the next possible shape."""
         new_brush_index = self.brush_shapes.index(self.brush_shape) + 1
+        
         if new_brush_index > len(self.brush_shapes) - 1:
             new_brush_index = 0
+        
         self.brush_shape = self.brush_shapes[new_brush_index]
+        
         self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
 
     def check_coordinate_systems(self):
@@ -195,8 +201,7 @@ class BrushTool(QgsMapTool):
                 self.t = QgsCoordinateTransform(
                     self.canvas.project().crs(),
                     self.active_layer.sourceCrs(),
-                    QgsProject.instance()
-                )
+                    QgsProject.instance())
 
     def reset(self):
         """Erase data in geometric attributes when the tool is reset."""
