@@ -41,16 +41,65 @@ import os.path
 from .brushtools import BrushTool
 
 class Brush:
-    """QGIS Plugin Implementation."""
+    """QGIS Plugin Implementation of Draw by Brush.
+    
+    Attributes:
+        iface: The QgsInterface of the current project instance.
+        tool: The BrushTool or other currently active plugin map tool.
+        tool_name: The name if the currently active plugin map tool.
+        previous_tool: The QgsMapTool that was active when the plugin was first
+            activated.
+        active_layer: The currently active map layer (can be any subclass of
+            QgsMapLayer).
+        sb: The QgsStatusBar of the current project instance.
+        plugin_dir: The path to the folder containing the plugin's data.
+        translator: The QTranslator to be used in translating documentation to
+            match the user's locale.
+        actions: A list of the QActions containing the plugin's core
+            functionality, including the brush tool.
+        menu: A string containing the text to display in the plugin's menu
+            listing.
+        toolbar: The QToolBar containing the buttons for the plugin's actions.
+        explanation1: Multi-line string explaining the plugin's controls.
+        explanation2: Single-line string explaining the plugin's controls.
+        pluginIsActive: A boolean indicating whether the plugin is active.
+            This is useful for controlling behavior of accessory widgets
+            such as Dock Widgets when the plugin is activated and 
+            deactivated.
+        brush_action: The QAction responsible for activating the brush tool.
+
+    Methods:
+        initGui: Create the menu entries and toolbar icons inside the QGIS GUI.
+        tr: Translate a string using Qt translation API.
+        updateSB: Update the status bar.
+        resetSB: Reset the status bar.
+        activate_brush_tool: Activate the brush tool.
+        onClosePlugin: Clean up necessary items when dockwidget is closed.
+        unload: Clean up necessary items when the plugin is unloaded.
+        add_action: Add a button bound to an action onto the plugin toolbar.
+        disable_action: Reset necessary settings and restore active map tool
+            when disabling an action.
+        brush_action_requirements_check: Check that requirements for brush
+            action activation are met, and disable the action if not.
+        draw: Take the geometry and drawing flags from self.tool and modify
+            self.active_layer accordingly.
+        set_previous_tool: Reset self.previous_tool to the currently active
+            map tool.
+        features_overlapping_with: Determine which features in self.active_layer
+            overlap with a given feature, and organize them into a dict
+            by type of overlap.
+        get_active_layer: Reset the reference to the currently active layer and
+             reconnect editing signals with brush_action_requirements_check
+             accordingly.
+    """
 
     #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
-        """Constructor.
+        """Constructor for the Draw by Brush plugin.
 
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
+        Args:
+            iface: A QgsInterface instance which provides the hook by which the
+                class can manipulate the QGIS application at run time.
         """
         # Save reference to the QGIS interface
         self.iface = iface
@@ -102,7 +151,8 @@ class Brush:
         self.pluginIsActive = False
 
     def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        """Create the menu entries and toolbar buttons inside the QGIS GUI, 
+        and connect the signals and slots that pertain to them."""
         # Create Brush Action
         icon_path = ':/plugins/brush/resources/paintbrush.png'
         self.brush_action = self.add_action(
@@ -129,13 +179,11 @@ class Brush:
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
-        We implement this ourselves since we do not inherit QObject.
+        Args:
+            message: The string or QString for translation.
 
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
+        Returns: 
+            A QString containing the translated message.
         """
         return QCoreApplication.translate('Brush', message)
 
@@ -152,7 +200,8 @@ class Brush:
 
     #------------------------------- ACTIVATION -------------------------------
     def activate_brush_tool(self):
-        """Activate and run the brush tool"""
+        """Set up the brush tool, connect it to the GUI, and connect its 
+        signals with the proper slots."""
         # Load and start the plugin
         if not self.pluginIsActive:
             self.pluginIsActive = True
@@ -184,7 +233,7 @@ class Brush:
         self.pluginIsActive = False
 
     def unload(self):
-        """Removes the plugin menu item and icon from QGIS GUI."""
+        """Remove the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&Draw by Brush'),
@@ -208,43 +257,33 @@ class Brush:
         tool_tip=None,
         menu=None,
         parent=None):
-        """Add a toolbar icon to the toolbar.
+        """Add a button bound to an action onto the plugin toolbar. 
 
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
+        Args:
+            icon_path: A string containing the path to the icon for the action.
+                This can be a resource path (e.g. ':/plugins/foo/bar.png') or a
+                normal file system path.
+            text: A string that should be shown in menu items for this action.
+            callback: The function to be called when the action is triggered.
+            enabled_flag: A boolean indicating if the action should be enabled
+                by default. Defaults to True.
+            checkable: A boolean indicating whether the action can be toggled
+                on or off.
+            add_to_menu: A boolean indicating whether the action should also
+                be added to the menu. Defaults to True.
+            add_to_toolbar: A boolean indicating whether the action should also
+                be added to the toolbar. Defaults to True.
+            status_tip: An optional string to show in the status bar upon mouse
+                hover. Defaults to None.
+            tool_tip: An optional string to show in a tooltip upon mouse hover.
+                Defaults to None.
+            menu: An optional string containing the name of a menu to add the
+                button to. Defaults to None.
+            parent: The parent QWidget for the new action. Defaults to None.
 
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
+        Returns:
+            The QAction that was created. Note that the action is also added to
+            self.actions.
         """
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -304,7 +343,8 @@ class Brush:
             self.disable_action(self.brush_action)
 
     def draw(self, emmitted_geometry):
-        """This is the actual drawing state"""
+        """Take the emitted geometry and drawing flags from self.tool and
+        modify self.active_layer accordingly."""
         # Get current active layer used in the drawing tool
         self.active_layer = self.tool.active_layer
 
@@ -405,16 +445,22 @@ class Brush:
         self.resetSB()
 
     def set_previous_tool(self, action):
-        """Reset previous_tool to the current active map tool. To be called
-        whenever the action is toggled."""
+        """Reset self.previous_tool to the current active map tool. To be 
+        called whenever the action is toggled."""
         if action.isChecked():
             self.previous_tool = self.iface.mapCanvas().mapTool()
 
     #------------------------------- CALCULATION ------------------------------
     def features_overlapping_with(self, feature):
-        """Returns a dict of features in self.active_layer that overlap with
-        a given `feature`. Both `feature` and self.active_layer must be in
-        the same CRS.
+        """Determine which features in self.active_layer overlap with a given
+        feature, and organize them into a dict by type of overlap.
+        
+        Args:
+            feature: A QgsFeature to be checked against self.active_layer. Must
+                be in the same CRS as self.active_layer.
+        
+        Returns:
+            A dict of features in self.active_layer that overlap with feature.
         
         The returned dict is of the following form:
             {
@@ -425,9 +471,10 @@ class Brush:
                                    features
             }
 
-        If the two features have equivalent geometries, f is added to "contained_by"
+        If the two features have equivalent geometries, the feature from
+        self.active_layer is added to 'contained_by'.
 
-        Note: if this method causes performance issues, QgsGeometryEngine
+        Note: If this method causes performance issues, QgsGeometryEngine
         may provide a more efficient approach.
         """
         overlapping_features = {
@@ -454,7 +501,8 @@ class Brush:
 
     def get_active_layer(self):
         """Reset the reference to the current active layer and reconnect 
-        signals to slots as necessary. To be called whenever the active layer changes."""
+        signals to slots as necessary. To be called whenever the active layer
+        changes."""
         self.active_layer = self.iface.activeLayer()
         if ((self.active_layer != None) and
             (self.active_layer.type() == QgsMapLayer.VectorLayer)):

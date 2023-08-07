@@ -45,9 +45,61 @@ from PyQt5.QtGui import QGuiApplication
 from .resources import *
 
 class BrushTool(QgsMapTool):
-    """
-    Brush drawing tool.
-    Patterned off of `drawtools.py` from the qdraw plugin.
+    """Custom QgsMapTool to simulate drawing with a brush.
+    
+    Attributes:
+        iface: The QgsInterface of the current project instance.
+        canvas: The QgsMapCanvas of the current project instance.
+        active_layer: The currently active map layer (can be any subclass of
+            QgsMapLayer).
+        brush_radius: An integer number representing the radius of the brush 
+            in pixels.
+        brush_points: An integer number of points to use when approximating a
+            circle.
+        brush_angle: A float representing the angle of the brush.
+        brush_shapes: A list of strings indicating the names of the shapes the
+            brush can take.
+        brush_shape: A string of the name of the current shape of the brush.
+        draw_color: The QColor to use for rendering the QgsRubberBand when in
+            drawing mode.
+        erase_color: The QColor to use for rendering the QgsRubberBand when in
+            erasing mode.
+        t: The QgsCoordinateTransform to be used in reprojecting the geometry
+            from QgsRubberBand to the CRS of self.active_layer.
+        drawing_mode: A string indicating the current mode of the Brush Tool.
+        merging: A boolean indicating whether the geometry currently being
+            drawn must be merged with other features in the active layer.
+        reprojecting: A boolean indicating whether the geometry currently being
+            drawn must be reprojected out of the project CRS to match the CRS
+            of the active layer.
+        tab_shortcut: A QShortcut that binds the tab key to the method that
+            changes the brush shape.
+        rb: The QgsRubberBand containing the geometry currently being drawn.
+        previous_point: A QgsPointXY indicating the last recorded position of
+            the mouse pointer.
+        previous_geometry: A QgsGeometry containing the last recorded brush
+            shape, to be used only with non-circle brushes.
+
+    Methods:
+        activate: Make the brush tool cursor whenever tool is activated.
+        deactivate: Reset the rubber band and disable the tab shortcut whenever
+            the tool is deactivated.
+        make_cursor: Render the cursor using brush shape and size attributes.
+        switch_brush_shape: Switch the brush to the next possible shape.
+        check_coordinate_systems: Check that the active layer is in the same
+            CRS as the project instance, and if not, modify the relevant
+            attributes to prepare for reprojection.
+        reset: Erase data in geometric attributes when the tool is reset.
+        wheelEvent: When the user scrolls their mouse wheel, check for Shift 
+            and Ctrl modifiers and update the cursor accordingly.
+        canvasPressEvent: Create initial rubber band geometry based on current
+            mouse position.
+        canvasMoveEvent: Update rubber band geometry based on mouse movement.
+        canvasReleaseEvent: Process rubber band geometry (simplify, reproject 
+            if necessary) and then emit it for drawing into the active layer.
+        circle_around_point: Calculate a circle geometry around a given point.
+        wedge_around_point: Calculate a wedge geometry around a given point.
+
     """
     # Make signals for movement and end of selection and end of drawing
     move = pyqtSignal()
@@ -55,6 +107,13 @@ class BrushTool(QgsMapTool):
 
     #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
+        """Constructor for the Brush Tool.
+
+        Args:
+            iface: A QgsInterface instance which provides the hook by which the
+                class can manipulate the QGIS application at run time.
+        """
+        # Initialize the parent class
         QgsMapTool.__init__(self, iface.mapCanvas())
 
         # Save references to QGIS interface and current active layer
@@ -95,18 +154,19 @@ class BrushTool(QgsMapTool):
 
     #------------------------------- ACTIVATION -------------------------------
     def activate(self):
-        """Run when tool is activated"""        #TODO: wrap this into __init__?
+        """Make the brush tool cursor whenever tool is activated."""        #TODO: wrap this into __init__?
         self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
 
     def deactivate(self):
+        """Reset the rubber band and disable the tab shortcut whenever the tool
+        is deactivated."""
         self.rb.reset(True)
         self.tab_shortcut.setEnabled(False)
         QgsMapTool.deactivate(self)
 
     #------------------------------ UPPDATE STATE -----------------------------
     def make_cursor(self, shape, radius, angle):
-        """Sets the cursor to be a red circle scaled to a radius in px and
-        rotated by an angle in degrees."""
+        """Render the cursor based on brush shape and size attributes."""
         # Set cursor shape and size
         if shape == 'circle':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redcircle_500x500.png')
@@ -119,7 +179,7 @@ class BrushTool(QgsMapTool):
         self.canvas.setCursor(brush_cursor)
 
     def switch_brush_shape(self):
-        """Switch between the different brush shapes."""
+        """Switch the brush to the next possible shape."""
         new_brush_index = self.brush_shapes.index(self.brush_shape) + 1
         if new_brush_index > len(self.brush_shapes) - 1:
             new_brush_index = 0
@@ -127,13 +187,9 @@ class BrushTool(QgsMapTool):
         self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
 
     def check_coordinate_systems(self):
-        """Check if reprojection is necessary. If it is, update the
-        reprojection flag and prepare the necessary transformation.
-        
-        Modifies:
-            self.reprojecting
-            self.t
-        """
+        """Check that the active layer is in the same CRS as the project 
+        instance, and if not, update the reprojection flag and prepare the 
+        necessary transformation."""
         self.active_layer = self.iface.activeLayer()
         if self.active_layer != None: 
             if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
@@ -145,14 +201,22 @@ class BrushTool(QgsMapTool):
                 )
 
     def reset(self):
+        """Erase data in geometric attributes when the tool is reset."""
         self.previous_point = None
         self.previous_geometry = None
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
 
     #------------------------------- INTERACTION ------------------------------
     def wheelEvent(self, event):
-        """If shift is pressed, rescale brush radius and redraw the cursor.
-        If ctrl+shift is pressed, rotate and redraw the cursor."""
+        """When the user scrolls their mouse wheel, check for Shift and Ctrl
+        modifiers and update the cursor accordingly.
+        
+        If shift is pressed, rescale the brush radius and redraw the cursor.
+        If ctrl+shift is pressed, rotate and redraw the cursor.
+
+        Args:
+            event: A QEvent representing a change in the mouse wheel position.
+        """
         if event.modifiers() == Qt.ShiftModifier:
             event.accept()
             d = event.angleDelta().y()
@@ -166,11 +230,11 @@ class BrushTool(QgsMapTool):
             self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
 
     def canvasPressEvent(self, event):
-        """
-        The following needs to happen:
-          - apply the current brush to the rubber band
-          - start tracking mouse movement
+        """Create initial rubber band geometry based on current mouse position.
 
+        Args:
+            event: A QEvent representing the user clicking a mouse button on
+                the map canvas.
         """
 
         # Update reference to active layer
@@ -205,11 +269,18 @@ class BrushTool(QgsMapTool):
         self.previous_geometry = self.rb.asGeometry()
 
     def canvasMoveEvent(self, event):
-        """
+        """Update the rubber band geometry based on mouse movement.
 
-        - prev_geometry: previous wedge or circle
-        - current_geometry: current wedge or circle
-        - new_geometry: what will be added to the rubberband
+        To keep track of the different geometries used when calculating the 
+        updated geometry of the rubber band, the following variables are used:
+            - previous_geometry: the brush geometry around the previous point
+            - current_geometry: the brush geometry around the current point
+            - new_geometry: the calculated geometry that will be merged with
+                the current rubber band to create the updated rubber band.
+        
+        Args:
+            event: A QEvent representing the user moving their mouse across the
+                map canvas.
         """
         layer = self.active_layer
 
@@ -247,10 +318,12 @@ class BrushTool(QgsMapTool):
             self.rb.setToGeometry(self.rb.asGeometry().combine(new_geometry))
 
     def canvasReleaseEvent(self, event):
-        """
-        The following needs to happen:
-          - check to see if rubber band intersects with any of the active feature
-          - if so, add...
+        """Process the rubber band geometry (simplify, reproject if necessary)
+        and then emit it for drawing into the active layer.
+
+        Args:
+            event: A QEvent representing the user releasing their mouse button
+                after clicking on the map canvas.
         """
         layer = self.active_layer
         geom = self.rb.asGeometry()
@@ -287,21 +360,25 @@ class BrushTool(QgsMapTool):
     
     #------------------------------- CALCULATION ------------------------------
     def circle_around_point(self, center, radius=0, num_points=0, map_units=False):
-        """
-        Creates a circular QgsGeometry centered on a point with the given 
-        radius and num_points
+        """Create a circular QgsGeometry centered on a point with a given 
+        radius approximated by a number of points.
 
-        :type center: qgis.core.QgsPoint
-        :param center: canvas point, in layer crs
-        :type radius: float
-        :param radius: cicle radius, considered to be in layer units
-        :type num_points: int
-        :param num_points: number of vertices
-        :type map_units: bool
-        :param map_units: whether the radius should be considered in map units
-        :return: QgsGeometry of type QGis.Polygon
+        Args:
+            center: A QgsPointXY indicating the center of the circle.
+            radius: An integer or float representing the radius of the circle.
+                Defaults to 0, which means that self.brush_radius is used.
+            num_points: An integer indicating the number of points to use when
+                approximating the circle. Defaults to 0, which means that
+                self.brush_points is used.
+            map_units: A boolean indicating whether the radius should be
+                considered to be in map units. Defaults to False, which means
+                that radius is converted from pixels to map units.
+        
+        Returns:
+            A QgsGeometry (of type QGis.Polygon) approximating a circle.
 
-        Adapted from https://gis.stackexchange.com/a/69792
+        References:
+            - Adapted from https://gis.stackexchange.com/a/69792
         """
         if not radius:
             radius = self.brush_radius #default brush radius
@@ -324,10 +401,28 @@ class BrushTool(QgsMapTool):
         return QgsGeometry.fromPolygonXY([points])
 
     def wedge_around_point(self, center, radius=0, theta=0, map_units=False):
-        """Creates wedge shape around a central point with a given radius,
-        rotates by an angle.
+        """Create a wedge-shaped QgsGeometry around a central point with a 
+        given 'radius' (farthest distance from the center to a vertex) and
+        rotated by a given angle.
+
+        The wedge geometry matches the image shown in
+        :/plugins/brush/resources/redwedge_500x500.png.
+
+        Args:
+            center: A QgsPointXY indicating the 'center' of the wedge.
+            radius: An integer or float representing the 'radius' of the wedge,
+                which corresponds to the longest distance between the center
+                and a vertex. Defaults to 0, which means that self.brush_radius
+                is used.
+            theta: An integer or float representing the angle by which the
+                wedge should be rotated.
+            map_units: A boolean indicating whether the radius should be
+                considered to be in map units. Defaults to False, which means
+                that radius is converted from pixels to map units.
         
-        Geometry matches :/plugins/brush/resources/redwedge_500x500.png."""
+        Returns:
+            A QgsGeometry (of type QGis.Polygon) of a wedge.
+        """
         if not radius:
             radius = self.brush_radius #default brush radius
         
