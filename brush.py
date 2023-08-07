@@ -219,7 +219,7 @@ class Brush:
         # Initialize and configure self.tool
         self.tool = BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
-        self.tool.rbFinished.connect(lambda g: self.draw(g))
+        self.tool.rb_finished.connect(lambda g: self.draw(g))
         
         # Select the tool in the current interface
         self.iface.mapCanvas().setMapTool(self.tool)

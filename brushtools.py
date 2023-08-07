@@ -102,7 +102,7 @@ class BrushTool(QgsMapTool):
 
     """
     # Make signals for movement and end of selection and end of drawing
-    rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
+    rb_finished = pyqtSignal(QgsGeometry)    # from BeePen
 
     #------------------------------ INITIALIZATION ----------------------------
     def __init__(self, iface):
@@ -347,7 +347,7 @@ class BrushTool(QgsMapTool):
         new_geometry = new_geometry.simplify(tolerance)
         
         # Emit final geometry
-        self.rbFinished.emit(new_geometry)
+        self.rb_finished.emit(new_geometry)
 
         # refresh the canvas and reset the rubberband and flags
         self.reset()
