@@ -304,7 +304,8 @@ class Brush:
         return action
 
     def disable_action(self, action):
-        """Procedure for disabling actions"""
+        """Reset necessary settings and restore active map tool when disabling
+        an action."""
         # Toggle off
         action.setChecked(False)  #uncheck
 
