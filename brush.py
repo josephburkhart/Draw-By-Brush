@@ -140,13 +140,15 @@ class Brush:
                         	 u'- Right-click to erase\n'+
                              u'- Shift + scroll to re-scale the brush\n'+
                              u'- Shift + Ctrl + Scroll to rotate the brush\n'+
-                             u'- Tab to change the brush shape')
+                             u'- Tab to change the brush shape\n'+
+                             u'- Ctrl while drawing to merge')
 
         self.explanation2 = (u'Left-click to draw, '+
                         	 u'Right-click to erase, '+
                              u'Shift + scroll to re-scale, '+
                              u'Shift + Ctrl + Scroll to rotate, '+
-                             u'Tab to change shape')
+                             u'Tab to change shape, '+
+                             u'Ctrl while drawing to merge')
 
         self.pluginIsActive = False
 
