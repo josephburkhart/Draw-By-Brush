@@ -146,6 +146,7 @@ class BrushTool(QgsMapTool):
 
     def reset(self):
         self.previous_point = None
+        self.previous_geometry = None
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
 
     #------------------------------- INTERACTION ------------------------------
