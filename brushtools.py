@@ -324,7 +324,6 @@ class BrushTool(QgsMapTool):
             event: A QEvent representing the user releasing their mouse button
                 after clicking on the map canvas.
         """
-        layer = self.active_layer
         current_geometry = self.rb.asGeometry()
 
         # Reproject the rubberband geometry if necessary
