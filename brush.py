@@ -284,10 +284,10 @@ class Brush:
         """Reset necessary settings and restore active map tool when disabling
         an action."""
         # Toggle off
-        action.setChecked(False)  #uncheck
+        action.setChecked(False)
 
         # Disable the tool
-        action.setEnabled(False)  #disable
+        action.setEnabled(False)
 
         # Restore previous map tool (if any)
         # TODO: account for selected layer type
@@ -348,7 +348,7 @@ class Brush:
                 # Get current and previous geometries
                 current_geometry = new_feature.geometry()
                 current_geometry.convertToMultiType() #sometimes there is only one part
-                current_polygon = current_geometry.asMultiPolygon()[0]  #TODO: I don't know why it's multipolygon instead of polygon...
+                current_polygon = current_geometry.asMultiPolygon()[0]
                 current_exterior = current_polygon[0]
                 current_holes = current_polygon[1:] 
                 
@@ -378,9 +378,7 @@ class Brush:
                     new_geometry.addRing(hole[0])
                 if current_holes != []:
                     for part in new_parts_geometry.constParts():
-                        #TODO: something in the two lines below was causing an immediate crash. Crashes eventually stopped unexpectedly when I restarted QGIS
-                        #print(part)
-                        new_geometry.addPart(part.boundary()) # I don't understand why part is a QgsPolygon, but it is
+                        new_geometry.addPart(part.boundary())
                 
                 # Change feature geometry to what was calculated above
                 f.setGeometry(new_geometry)
@@ -392,7 +390,6 @@ class Brush:
                 self.active_layer.deleteFeature(f.id())
 
             # For all other features, modify their geometry
-            # TODO: revise variable names to match pattern in brushtools.py
             for f in overlapping_features['partial_overlap']:
                 previous_geometry = f.geometry()
                 new_geometry = previous_geometry.difference(new_feature.geometry())

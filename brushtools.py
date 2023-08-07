@@ -153,7 +153,7 @@ class BrushTool(QgsMapTool):
 
     #------------------------------- ACTIVATION -------------------------------
     def activate(self):
-        """Make the brush tool cursor whenever tool is activated."""        #TODO: wrap this into __init__?
+        """Make the brush tool cursor whenever tool is activated."""
         self.make_cursor(self.brush_shape, self.brush_radius, self.brush_angle)
 
     def deactivate(self):
@@ -336,8 +336,7 @@ class BrushTool(QgsMapTool):
         # Simplify the rubberband geometry
         # tolerance value is calculated based on brush_radius and brush_points
         # scale factor is px / mm; as mm (converted to map pixels, then to map units)
-        # TODO: move this calculation to __init__ above (but have to account
-        #       for selecting a new layer with a different CRS)
+        # TODO: make tolerance an attribute (makes it easy to update from the GUI later)
         context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
         radius = self.brush_radius
         radius *= context.mapToPixel().mapUnitsPerPixel()
@@ -425,7 +424,7 @@ class BrushTool(QgsMapTool):
         if not radius:
             radius = self.brush_radius #default brush radius
         
-        if not theta:  #TODO: remove checks like this (maybe remove to general module)
+        if not theta:
             theta = self.brush_angle
 
         if not map_units:
@@ -447,8 +446,6 @@ class BrushTool(QgsMapTool):
         p3_y = center.y() - (radius/2)
 
         # Rotated Points
-        # TODO: maybe make the geometry with the above points and then rotate using
-        #       QgsGeometry method. This would be easier to read for collaborators
         p1_x_r =    (p1_x - center.x())*cos(theta) + (p1_y - center.y())*sin(theta) + center.x()
         p1_y_r = -1*(p1_x - center.x())*sin(theta) + (p1_y - center.y())*cos(theta) + center.y()
 
