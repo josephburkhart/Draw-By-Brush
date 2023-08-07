@@ -220,7 +220,6 @@ class Brush:
         self.tool = BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
         self.tool.rbFinished.connect(lambda g: self.draw(g))
-        self.tool.move.connect(self.updateSB)
         
         # Select the tool in the current interface
         self.iface.mapCanvas().setMapTool(self.tool)

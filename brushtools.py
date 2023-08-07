@@ -102,7 +102,6 @@ class BrushTool(QgsMapTool):
 
     """
     # Make signals for movement and end of selection and end of drawing
-    move = pyqtSignal()
     rbFinished = pyqtSignal(QgsGeometry)    # from BeePen
 
     #------------------------------ INITIALIZATION ----------------------------
