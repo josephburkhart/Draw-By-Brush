@@ -256,12 +256,9 @@ class Brush:
         callback,
         enabled_flag=True,
         checkable=False,
-        add_to_menu=True,
         add_to_toolbar=True,
         status_tip=None,
-        whats_this=None,
         tool_tip=None,
-        menu=None,
         parent=None):
         """Add a button bound to an action onto the plugin toolbar. 
 
@@ -275,16 +272,12 @@ class Brush:
                 by default. Defaults to True.
             checkable: A boolean indicating whether the action can be toggled
                 on or off.
-            add_to_menu: A boolean indicating whether the action should also
-                be added to the menu. Defaults to True.
             add_to_toolbar: A boolean indicating whether the action should also
                 be added to the toolbar. Defaults to True.
             status_tip: An optional string to show in the status bar upon mouse
                 hover. Defaults to None.
             tool_tip: An optional string to show in a tooltip upon mouse hover.
                 Defaults to None.
-            menu: An optional string containing the name of a menu to add the
-                button to. Defaults to None.
             parent: The parent QWidget for the new action. Defaults to None.
 
         Returns:
@@ -299,20 +292,12 @@ class Brush:
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
-
-        if whats_this is not None:
-            action.setWhatsThis(whats_this)
         
         if tool_tip is not None:
             action.setToolTip(tool_tip)
 
         if add_to_toolbar:
             self.toolbar.addAction(action)
-
-        if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
 
         self.actions.append(action)
 
