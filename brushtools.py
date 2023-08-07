@@ -325,13 +325,14 @@ class BrushTool(QgsMapTool):
                 after clicking on the map canvas.
         """
         layer = self.active_layer
-        geom = self.rb.asGeometry()
+        current_geometry = self.rb.asGeometry()
+
         # Reproject the rubberband geometry if necessary
         if self.reprojecting == True:
-            new_geom = QgsGeometry(geom) #have to clone before transforming
-            new_geom.transform(self.t)
+            new_geometry = QgsGeometry(geom) #have to clone before transforming
+            new_geometry.transform(self.t)
         else:
-            new_geom = geom
+            new_geometry = current_geometry
 
         # Simplify the rubberband geometry
         # tolerance value is calculated based on brush_radius and brush_points
@@ -344,10 +345,10 @@ class BrushTool(QgsMapTool):
 
         tolerance = (2*pi*radius)/(24*self.brush_points)
 
-        new_geom = new_geom.simplify(tolerance)
+        new_geometry = new_geometry.simplify(tolerance)
         
         # Emit final geometry
-        self.rbFinished.emit(new_geom)
+        self.rbFinished.emit(new_geometry)
 
         # refresh the canvas and reset the rubberband and flags
         self.reset()
