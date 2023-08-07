@@ -180,7 +180,7 @@ class BrushTool(QgsMapTool):
 
         # Set status and color
         if event.button() == Qt.LeftButton:
-            self.drawing_mode = 'drawing_with_brush'
+            self.drawing_mode = 'drawing'
             self.rb.setColor(self.draw_color)
 
             # If user pressed Ctrl, toggle the merging flag
@@ -189,7 +189,7 @@ class BrushTool(QgsMapTool):
                 self.merging = True
         
         elif event.button() == Qt.RightButton:
-            self.drawing_mode = 'erasing_with_brush'
+            self.drawing_mode = 'erasing'
             self.rb.setColor(self.erase_color)
         
         # Create initial geometry
@@ -212,7 +212,7 @@ class BrushTool(QgsMapTool):
         """
         layer = self.active_layer
 
-        if self.drawing_mode in ('drawing_with_brush','erasing_with_brush'):
+        if self.drawing_mode in ('drawing','erasing'):
             # Get current mouse location
             point = self.toMapCoordinates(event.pos())
             

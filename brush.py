@@ -313,7 +313,7 @@ class Brush:
         new_feature.setGeometry(emmitted_geometry)
 
         # If drawing, add new feature
-        if self.tool.drawing_mode == 'drawing_with_brush':
+        if self.tool.drawing_mode == 'drawing':
             # If merging, recalculate the geometry of new_feature and delete
             # all overlapping features
             # TODO: if attributes are present, prompt user to select which
@@ -329,7 +329,7 @@ class Brush:
             self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
-        elif self.tool.drawing_mode == 'erasing_with_brush':
+        elif self.tool.drawing_mode == 'erasing':
             # Calculate overlapping features
             overlapping_features = self.features_overlapping_with(new_feature)
             
