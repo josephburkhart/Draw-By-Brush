@@ -77,7 +77,7 @@ class BrushTool(QgsMapTool):
         # Set flags
         self.drawing_mode = 'inactive'
         self.merging = False
-        self.reproject_necessary = False
+        self.reprojecting = False
 
         # Set shortcuts
         self.tab_shortcut = QShortcut(QKeySequence(Qt.Key_Tab), self.iface.mainWindow())
@@ -131,13 +131,13 @@ class BrushTool(QgsMapTool):
         reprojection flag and prepare the necessary transformation.
         
         Modifies:
-            self.reproject_necessary
+            self.reprojecting
             self.t
         """
         self.active_layer = self.iface.activeLayer()
         if self.active_layer != None: 
             if self.canvas.project().crs().authid() != self.active_layer.sourceCrs().authid():
-                self.reproject_necessary = True
+                self.reprojecting = True
                 self.t = QgsCoordinateTransform(
                     self.canvas.project().crs(),
                     self.active_layer.sourceCrs(),
@@ -254,7 +254,7 @@ class BrushTool(QgsMapTool):
         layer = self.active_layer
         geom = self.rb.asGeometry()
         # Reproject the rubberband geometry if necessary
-        if self.reproject_necessary == True:
+        if self.reprojecting == True:
             new_geom = QgsGeometry(geom) #have to clone before transforming
             new_geom.transform(self.t)
         else:
