@@ -46,7 +46,6 @@ class Brush:
     Attributes:
         iface: The QgsInterface of the current project instance.
         tool: The BrushTool or other currently active plugin map tool.
-        tool_name: The name if the currently active plugin map tool.
         previous_tool: The QgsMapTool that was active when the plugin was first
             activated.
         active_layer: The currently active map layer (can be any subclass of
@@ -71,8 +70,6 @@ class Brush:
     Methods:
         initGui: Create the menu entries and toolbar icons inside the QGIS GUI.
         tr: Translate a string using Qt translation API.
-        updateSB: Update the status bar. Only useful with multiple tools.
-        resetSB: Reset the status bar. Only useful with multiple tools.
         activate_brush_tool: Activate the brush tool.
         onClosePlugin: Clean up necessary items when dockwidget is closed.
         unload: Clean up necessary items when the plugin is unloaded.
@@ -109,7 +106,6 @@ class Brush:
 
         # Save additional references
         self.tool = None
-        self.tool_name = None
         self.previous_tool = None
         self.active_layer = None
 
@@ -189,23 +185,6 @@ class Brush:
         """
         return QCoreApplication.translate('Brush', message)
 
-    def updateSB(self):
-        """Update the status bar.
-        
-        Note: This is only really useful if the plugin has multiple QActions.
-        """
-        pass #TODO: placeholder
-
-    def resetSB(self):
-        """Reset the status bar.
-
-        Note: This is only really useful if the plugin has multiple QActions.
-        """
-        message = {
-            'draw_brush': self.explanation2
-        }
-        self.sb.showMessage(self.tr(message[self.tool_name]))
-
     #------------------------------- ACTIVATION -------------------------------
     def activate_brush_tool(self):
         """Set up the brush tool, connect it to the GUI, and connect its 
@@ -225,15 +204,12 @@ class Brush:
         
         # Select the tool in the current interface
         self.iface.mapCanvas().setMapTool(self.tool)
-        
-        # Set tool name -- TODO: this is not useful
-        self.tool_name = 'draw_brush'
 
         # Update tool attribute
         self.tool.active_layer = self.active_layer
 
-        # Reset the status bar
-        self.resetSB()
+        # Show controls in the status bar
+        self.sb.showMessage(self.tr(u'Brush Tool:\t'+self.explanation2))
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -435,7 +411,6 @@ class Brush:
 
         # Clean up at the end
         self.tool.reset()
-        self.resetSB()
 
     def set_previous_tool(self, action):
         """Reset self.previous_tool to the current active map tool. To be 
