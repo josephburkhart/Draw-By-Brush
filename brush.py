@@ -193,10 +193,6 @@ class Brush:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-        # Reset the tool if another one is active -- TODO: this is not useful
-        if self.tool:
-            self.tool.reset()
-
         # Initialize and configure self.tool
         self.tool = BrushTool(self.iface)
         self.tool.setAction(self.actions[0])
