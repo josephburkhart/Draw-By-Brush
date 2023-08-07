@@ -145,7 +145,7 @@ class BrushTool(QgsMapTool):
                 )
 
     def reset(self):
-        self.prev_point = None
+        self.previous_point = None
         self.rb.reset(QgsWkbTypes.PolygonGeometry)
 
     #------------------------------- INTERACTION ------------------------------
@@ -200,8 +200,8 @@ class BrushTool(QgsMapTool):
             self.rb.setToGeometry(self.wedge_around_point(point), None)
         
         # Create previous point and geometry tracker (used in canvasMoveEvent below)
-        self.prev_point = point
-        self.prev_geometry = self.rb.asGeometry()
+        self.previous_point = point
+        self.previous_geometry = self.rb.asGeometry()
 
     def canvasMoveEvent(self, event):
         """
@@ -219,7 +219,7 @@ class BrushTool(QgsMapTool):
             # Handle drawing with circular brush
             if self.brush_shape == 'circle':
                 # Calculate line from previous mouse location
-                mouse_move_line = QgsLineString([self.prev_point, point])
+                mouse_move_line = QgsLineString([self.previous_point, point])
 
                 # Calculate buffer distance (could be moved to canvasPressEvent)
                 # scale factor is px / mm; as mm (converted to map pixels, then to map units)
@@ -231,16 +231,16 @@ class BrushTool(QgsMapTool):
                 new_geometry = QgsGeometry(mouse_move_line).buffer(radius, self.brush_points)
 
                 # Set point tracker to current point
-                self.prev_point = point
+                self.previous_point = point
 
             # Handle drawing with wedge brush
             elif self.brush_shape == 'wedge':
                 # Calculate new geometry
                 current_geometry = self.wedge_around_point(point)
-                new_geometry = current_geometry.combine(self.prev_geometry).convexHull()
+                new_geometry = current_geometry.combine(self.previous_geometry).convexHull()
 
                 # Set geometry tracker to current geometry
-                self.prev_geometry = current_geometry
+                self.previous_geometry = current_geometry
 
             # Set new rubberband geometry
             self.rb.setToGeometry(self.rb.asGeometry().combine(new_geometry))
