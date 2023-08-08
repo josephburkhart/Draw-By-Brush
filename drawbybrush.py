@@ -118,7 +118,7 @@ class DrawByBrush:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'Brush_{}.qm'.format(locale))
+            'drawbybrush_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -127,24 +127,26 @@ class DrawByBrush:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Draw by Brush')
-        self.toolbar = self.iface.addToolBar(u'Draw by Brush')
-        self.toolbar.setObjectName(u'Draw by Brush')
+        self.menu = self.tr(u'Draw by Brush')
+        self.toolbar = self.iface.addToolBar(self.tr(u'Draw by Brush'))
+        self.toolbar.setObjectName(self.tr(u'Draw by Brush'))
 
-        self.explanation1 = (u'- Left-click to draw\n'+
-                        	 u'- Right-click to erase\n'+
-                             u'- Shift + scroll to re-scale the brush\n'+
-                             u'- Shift + Ctrl + Scroll to rotate the brush\n'+
-                             u'- Tab to change the brush shape\n'+
-                             u'- Ctrl while drawing to merge\n'+
-                             u'  (Note: attributes are lost on merge)')
+        self.tool_tip = self.tr(u'Brush Tool\n\n'+
+                                u'- Left-click to draw\n'+
+                        	    u'- Right-click to erase\n'+
+                                u'- Shift + scroll to re-scale the brush\n'+
+                                u'- Shift + Ctrl + Scroll to rotate the brush\n'+
+                                u'- Tab to change the brush shape\n'+
+                                u'- Ctrl while drawing to merge\n'+
+                                u'  (Note: attributes are lost on merge)')
 
-        self.explanation2 = (u'Left-click to draw, '+
-                        	 u'Right-click to erase, '+
-                             u'Shift + scroll to re-scale, '+
-                             u'Shift + Ctrl + Scroll to rotate, '+
-                             u'Tab to change shape, '+
-                             u'Ctrl while drawing to merge')
+        self.status_tip = self.tr(u'Brush Tool:\t'+
+                                  u'Left-click to draw, '+
+                        	      u'Right-click to erase, '+
+                                  u'Shift + scroll to re-scale, '+
+                                  u'Shift + Ctrl + Scroll to rotate, '+
+                                  u'Tab to change shape, '+
+                                  u'Ctrl while drawing to merge')
 
         self.pluginIsActive = False
 
@@ -159,8 +161,8 @@ class DrawByBrush:
             checkable=True,
             callback=self.activate_brush_tool,
             enabled_flag=False,
-            status_tip=self.tr(u'Brush Tool:\t'+self.explanation2),
-            tool_tip=self.tr(u'Brush Tool\n\n'+self.explanation1),
+            status_tip=self.status_tip,
+            tool_tip=self.tool_tip,
             parent=self.iface.mainWindow())
         
         # Connect necessary signals and slots
@@ -205,7 +207,7 @@ class DrawByBrush:
         self.tool.active_layer = self.active_layer
 
         # Show controls in the status bar
-        self.sb.showMessage(self.tr(u'Brush Tool:\t'+self.explanation2))
+        self.sb.showMessage(self.status_tip)
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -215,7 +217,7 @@ class DrawByBrush:
         """Remove the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Draw by Brush'),
+                self.tr(u'Draw by Brush'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
