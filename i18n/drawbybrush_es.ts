@@ -4,7 +4,7 @@
 <context>
     <name>DrawByBrush</name>
     <message>
-        <location filename="../drawbybrush.py" line="220"/>
+        <location filename="../drawbybrush.py" line="219"/>
         <source>Draw by Brush</source>
         <translation>Dibujar por Pincel</translation>
     </message>
@@ -37,7 +37,7 @@
     <message>
         <location filename="../drawbybrush.py" line="143"/>
         <source>Brush Tool:	Left-click to draw, Right-click to erase, Shift + scroll to re-scale, Shift + Ctrl + Scroll to rotate, Tab to change shape, Ctrl while drawing to merge</source>
-        <translation>Pincel:   Clic izqdo dibuja, Clic dcho borra, Shift + scroll cambia escala, Shift + Ctrl + scroll rota forma, Tab para cambia forma, Ctrl mientras dibujando para combinar</translation>
+        <translation>Pincel:   Clic izqdo dibuja, Clic dcho borra, Shift + scroll cambia la escala, Shift + Ctrl + scroll rota la forma, Tab cambia la forma, Ctrl mientras dibujando para combinar</translation>
     </message>
 </context>
 </TS>
