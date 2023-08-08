@@ -34,7 +34,6 @@ from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsVectorLayer,\
 from .resources import *
 
 # Import the code for the DockWidget
-from .brush_dockwidget import BrushDockWidget
 import os.path
 
 # Import the brush tool code
