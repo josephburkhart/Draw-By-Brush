@@ -79,12 +79,6 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <circle
-       style="display:inline;fill:#ff0000;fill-opacity:0.25;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.867;stroke-dasharray:none;stroke-opacity:1"
-       id="path968"
-       cx="62.641659"
-       cy="62.641659"
-       r="61.606312" />
     <path
        style="fill:#ff0000;stroke:#ff0000;stroke-width:1.867;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;fill-opacity:0.25;stroke-dasharray:none"
        d="M 62.64166,1.035347 31.25,93.75 h 62.5 z"
