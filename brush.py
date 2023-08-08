@@ -137,7 +137,8 @@ class Brush:
                              u'- Shift + scroll to re-scale the brush\n'+
                              u'- Shift + Ctrl + Scroll to rotate the brush\n'+
                              u'- Tab to change the brush shape\n'+
-                             u'- Ctrl while drawing to merge')
+                             u'- Ctrl while drawing to merge\n'+
+                             u'  (Note: attributes are lost on merge)')
 
         self.explanation2 = (u'Left-click to draw, '+
                         	 u'Right-click to erase, '+
