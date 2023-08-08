@@ -116,8 +116,8 @@ class BrushTool(QgsMapTool):
         QgsMapTool.__init__(self, iface.mapCanvas())
 
         # Save references to QGIS interface and current active layer
-        self.canvas = iface.mapCanvas()
         self.iface = iface
+        self.canvas = iface.mapCanvas()
         self.active_layer = iface.activeLayer()
 
         # Set other instance attributes
