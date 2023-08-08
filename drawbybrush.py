@@ -58,8 +58,8 @@ class DrawByBrush:
         menu: A string containing the text to display in the plugin's menu
             listing.
         toolbar: The QToolBar containing the buttons for the plugin's actions.
-        explanation1: Multi-line string explaining the plugin's controls.
-        explanation2: Single-line string explaining the plugin's controls.
+        tool_tip: Multi-line string explaining the plugin's controls.
+        status_tip: Single-line string explaining the plugin's controls.
         pluginIsActive: A boolean indicating whether the plugin is active.
             This is useful for controlling behavior of accessory widgets
             such as Dock Widgets when the plugin is activated and 
