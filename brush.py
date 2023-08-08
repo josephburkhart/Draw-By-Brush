@@ -40,7 +40,7 @@ import os.path
 # Import the brush tool code
 from .brushtools import BrushTool
 
-class Brush:
+class DrawByBrush:
     """QGIS Plugin Implementation of Draw by Brush.
     
     Attributes:
@@ -184,7 +184,7 @@ class Brush:
         Returns: 
             A QString containing the translated message.
         """
-        return QCoreApplication.translate('Brush', message)
+        return QCoreApplication.translate('DrawByBrush', message)
 
     #------------------------------- ACTIVATION -------------------------------
     def activate_brush_tool(self):
