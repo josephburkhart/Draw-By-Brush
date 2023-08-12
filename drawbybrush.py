@@ -332,7 +332,7 @@ class DrawByBrush:
                     self.active_layer.deleteFeature(f.id())
             
             # Add new feature and commit changes
-            self.active_layer.dataProvider().addFeatures([new_feature])
+            self.active_layer.addFeature(new_feature)
             #self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
