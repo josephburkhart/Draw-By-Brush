@@ -333,7 +333,7 @@ class DrawByBrush:
             
             # Add new feature and commit changes
             self.active_layer.dataProvider().addFeatures([new_feature])
-            self.active_layer.commitChanges(stopEditing=False)
+            #self.active_layer.commitChanges(stopEditing=False)
 
         # If erasing, modify existing features
         elif self.tool.drawing_mode == 'erasing':
@@ -394,7 +394,7 @@ class DrawByBrush:
                 f.setGeometry(new_geometry)
                 self.active_layer.updateFeature(f)
 
-            self.active_layer.commitChanges(stopEditing=False)
+            #self.active_layer.commitChanges(stopEditing=False)
 
         # Delete the instance of new_feature to free up memory
         # TODO: delete other expensive variables as well
