@@ -338,7 +338,7 @@ class BrushTool(QgsMapTool):
 
         # Reproject the rubberband geometry if necessary
         if self.reprojecting == True:
-            new_geometry = QgsGeometry(geom) #have to clone before transforming
+            new_geometry = QgsGeometry(current_geometry) #have to clone before transforming
             new_geometry.transform(self.t)
         else:
             new_geometry = current_geometry
