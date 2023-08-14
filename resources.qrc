@@ -4,5 +4,6 @@
 		<file>resources/12gon_64x64.png</file>
 		<file>resources/redcircle_500x500.png</file>
         <file>resources/redwedge_500x500.png</file>
+        <file>resources/redrectangle_500x500.png</file>
     </qresource>
 </RCC>
