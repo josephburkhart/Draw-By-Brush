@@ -124,7 +124,7 @@ class BrushTool(QgsMapTool):
         self.brush_radius = 120                 # default brush parameters
         self.brush_points = 24
         self.brush_angle = 0
-        self.brush_shapes = ['circle', 'wedge']
+        self.brush_shapes = ['circle', 'wedge', 'rectangle']
         self.brush_shape = self.brush_shapes[0]
 
         self.draw_color = QColor(0,0,255,127)    # default tool colors
@@ -171,6 +171,9 @@ class BrushTool(QgsMapTool):
         
         elif shape == 'wedge':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redwedge_500x500.png')
+
+        elif shape == 'rectangle':
+            brush_pixmap = QPixmap(':/plugins/brush/resources/redrectangle_500x500.png')
         
         scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
         transformation = QTransform().rotate(angle)
@@ -308,10 +311,13 @@ class BrushTool(QgsMapTool):
                 # Set point tracker to current point
                 self.previous_point = point
 
-            # Handle drawing with wedge brush
-            elif self.brush_shape == 'wedge':
+            # Handle drawing with all other brushes
+            else:
                 # Calculate new geometry
-                current_geometry = self.wedge_around_point(point)
+                if self.brush_shape == 'wedge':
+                    current_geometry = self.wedge_around_point(point)
+                elif self.brush_shape == 'rectangle':
+                    current_geometry = self.rectangle_around_point(point)
                 new_geometry = current_geometry.combine(self.previous_geometry).convexHull()
 
                 # Set geometry tracker to current geometry
@@ -463,6 +469,78 @@ class BrushTool(QgsMapTool):
             QgsPointXY(p1_x_r, p1_y_r),
             QgsPointXY(p2_x_r, p2_y_r),
             QgsPointXY(p3_x_r, p3_y_r)
+        ]
+
+        return QgsGeometry.fromPolygonXY([points])
+    
+    def rectangle_around_point(self, center, radius=0, theta=0, map_units=False):
+        """Create a rectangular QgsGeometry around a central point with a 
+        given 'radius' (farthest distance from the center to the midpoint of a
+        side) and rotated by a given angle.
+
+        The wedge geometry matches the image shown in
+        :/plugins/brush/resources/redrectangle_500x500.png.
+
+        Args:
+            center: A QgsPointXY indicating the center of the rectangle.
+            radius: An integer or float representing the 'radius' of the 
+                rectangle, which corresponds to the longest distance between
+                the center and the midpoint of a side. Defaults to 0, which
+                means that self.brush_radius is used.
+            theta: An integer or float representing the angle by which the
+                rectangle should be rotated.
+            map_units: A boolean indicating whether the radius should be
+                considered to be in map units. Defaults to False, which means
+                that radius is converted from pixels to map units.
+        
+        Returns:
+            A QgsGeometry (of type QGis.Polygon) of a rectangle.
+        """
+        if not radius:
+            radius = self.brush_radius
+        
+        if not theta:
+            theta = self.brush_angle
+
+        if not map_units:
+            context = QgsRenderContext().fromMapSettings(self.canvas.mapSettings())
+            # scale factor is px / mm; as mm (converted to map pixels, then to map units)
+            radius *= context.mapToPixel().mapUnitsPerPixel()
+
+        # Convert theta to radians
+        theta = theta*(pi/180)
+
+        # Unrotated Points
+        p1_x = center.x() + (radius/3)
+        p1_y = center.y() + radius
+        
+        p2_x = center.x() + (radius/3)
+        p2_y = center.y() - radius
+
+        p3_x = center.x() - (radius/3)
+        p3_y = center.y() - radius
+
+        p4_x = center.x() - (radius/3)
+        p4_y = center.y() + radius
+
+        # Rotated Points
+        p1_x_r =    (p1_x - center.x())*cos(theta) + (p1_y - center.y())*sin(theta) + center.x()
+        p1_y_r = -1*(p1_x - center.x())*sin(theta) + (p1_y - center.y())*cos(theta) + center.y()
+
+        p2_x_r =    (p2_x - center.x())*cos(theta) + (p2_y - center.y())*sin(theta) + center.x()
+        p2_y_r = -1*(p2_x - center.x())*sin(theta) + (p2_y - center.y())*cos(theta) + center.y()
+
+        p3_x_r =    (p3_x - center.x())*cos(theta) + (p3_y - center.y())*sin(theta) + center.x()
+        p3_y_r = -1*(p3_x - center.x())*sin(theta) + (p3_y - center.y())*cos(theta) + center.y()
+
+        p4_x_r =    (p4_x - center.x())*cos(theta) + (p4_y - center.y())*sin(theta) + center.x()
+        p4_y_r = -1*(p4_x - center.x())*sin(theta) + (p4_y - center.y())*cos(theta) + center.y()
+
+        points = [
+            QgsPointXY(p1_x_r, p1_y_r),
+            QgsPointXY(p2_x_r, p2_y_r),
+            QgsPointXY(p3_x_r, p3_y_r),
+            QgsPointXY(p4_x_r, p4_y_r),
         ]
 
         return QgsGeometry.fromPolygonXY([points])
