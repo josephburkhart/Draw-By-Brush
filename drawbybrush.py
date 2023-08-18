@@ -318,6 +318,7 @@ class DrawByBrush:
         # Create new feature
         new_feature = QgsFeature()
         new_feature.setGeometry(emmitted_geometry)
+        new_feature.setFields(self.active_layer.fields())
 
         # If drawing, add new feature
         if self.tool.drawing_mode == 'drawing':
