@@ -1,4 +1,4 @@
-# QGIS Brush Tool Plugin
+# Draw By Brush
 
 This plugin adds brush tool-like functionality to QGIS, allowing the user to draw polygons in a new way.
 
