@@ -1,14 +1,14 @@
 [general]
 name=Draw by Brush
 qgisMinimumVersion=3.0
-description=A brush-like tool for drwaing polygons.
+description=A brush-like tool for drawing polygons.
 version=1.0
 icon=resources/paintbrush.png
 author=Joseph Burkhart
 email=josephburkhart.public@gmail.com
 about=This plugin provides a new drawing tool that imitates the brush tool common in Paint, Photoshop, and other computer drawing software. This tool can make it much easier to digitize polygons from certain kinds of old maps.
-tracker=https://github.com/josephburkhart/QGIS-Brush-Tool-Plugin/issues
-repository=https://github.com/josephburkhart/QGIS-Brush-Tool-Plugin
+tracker=https://github.com/josephburkhart/Draw-By-Brush/issues
+repository=https://github.com/josephburkhart/Draw-By-Brush
 tags=python, vector, digitizing, freehand
 
 # Flags
