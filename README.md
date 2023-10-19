@@ -13,5 +13,5 @@ This plugin can be downloaded and installed via the built-in Plugin Manager:
 4. Go to Plugins > Manage and Install Plugins to open the plugin manager
 5. In the plugin manager window, go to `Installed` and click the checkbox next to "Draw by Brush" to activate the plugin.
 
-## Usaage
+## Usage
 The plugin adds a new button the interface. When a multipolygon layer is selected, the button can be clicked to activate a new map tool. Instructions for using the tool can be viewed by hovering over the button.
