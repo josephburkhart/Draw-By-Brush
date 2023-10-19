@@ -15,3 +15,6 @@ This plugin can be downloaded and installed via the built-in Plugin Manager:
 
 ## Usage
 The plugin adds a new button (icon: <img src="https://github.com/josephburkhart/Draw-By-Brush/blob/4a16c80b56b941de928ce4b374a5bfd81f71e130/resources/paintbrush.png" width="20">) to the interface. When a multipolygon layer is selected, the button can be toggled on to activate the new map tool. Instructions for using the tool can be viewed by hovering over the button.
+
+## Acknowledgements
+Many thanks are owed to the Mauro Alberti and Mauro DeDonatis, creators of [beePen](https://plugins.qgis.org/plugins/beePen/), and Takayuki Mizutani, creator of [Bezier Editing](https://plugins.qgis.org/plugins/BezierEditing/) - I studied these plugins extensively when learning how to create my own. Thanks also to Jacky Volpes on the [QGIS-Developer mailing list](https://lists.osgeo.org/mailman/listinfo/qgis-developer), who directed me to these plugins for inspiration.
