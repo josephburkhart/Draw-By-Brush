@@ -225,9 +225,10 @@ class BrushTool(QgsMapTool):
         """
         if event.modifiers() == Qt.ShiftModifier:
             event.accept()
-            d = event.angleDelta().y()
-            self.brush_radius *= 1 + d/1000  #TODO: account for high-dpi mice
-            self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
+            if 5 < self.brush_radius < 1000:
+                d = event.angleDelta().y()
+                self.brush_radius *= 1 + d/1000  #TODO: account for high-dpi mice
+                self.make_cursor(self.brush_shape, int(self.brush_radius), int(self.brush_angle))
         
         elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             event.accept()
