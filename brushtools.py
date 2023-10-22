@@ -175,7 +175,7 @@ class BrushTool(QgsMapTool):
         elif shape == 'rectangle':
             brush_pixmap = QPixmap(':/plugins/brush/resources/redrectangle_500x500.png')
         
-        scaled_pixmap = brush_pixmap.scaled(radius*2,radius*2)
+        scaled_pixmap = brush_pixmap.scaled(int(radius*2),int(radius*2))
         transformation = QTransform().rotate(angle)
         transformed_pixmap = scaled_pixmap.transformed(transformation)
         brush_cursor = QCursor(transformed_pixmap)
