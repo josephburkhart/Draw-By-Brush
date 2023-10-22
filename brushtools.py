@@ -159,7 +159,7 @@ class BrushTool(QgsMapTool):
     def deactivate(self):
         """Reset the rubber band and disable the tab shortcut whenever the tool
         is deactivated."""
-        self.rb.reset(True)
+        self.reset()
         self.tab_shortcut.setEnabled(False)
         QgsMapTool.deactivate(self)
 
